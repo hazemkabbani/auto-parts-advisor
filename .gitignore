@@ -1,0 +1,11 @@
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+dist/
+out/
+mann_katalog/
+*.exe
+*.dmg
+downloads/

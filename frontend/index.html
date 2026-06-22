@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>مستشار قطع الغيار — الرقة</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI','Arial',sans-serif;background:#f0f4f8;color:#1a202c;direction:rtl}
+
+    .header{background:linear-gradient(135deg,#1a365d,#2d6a9f);color:white;padding:22px;text-align:center}
+    .header h1{font-size:1.6rem;font-weight:700;margin-bottom:4px}
+    .header p{font-size:.88rem;opacity:.85}
+
+    /* ── Tabs ── */
+    .tabs{display:flex;background:#dbe4ee}
+    .tab-btn{flex:1;padding:12px 6px;border:none;background:transparent;font-size:.88rem;
+      font-weight:600;cursor:pointer;font-family:inherit;color:#4a5568;
+      border-bottom:3px solid transparent;transition:all .2s}
+    .tab-btn.active{background:white;color:#1a365d;border-bottom:3px solid #2d6a9f}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+    .container{max-width:900px;margin:0 auto;padding:20px 14px}
+
+    /* ── Category chips ── */
+    .cat-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+    .chip{padding:7px 14px;border-radius:20px;border:2px solid #e2e8f0;background:white;
+      font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;color:#4a5568}
+    .chip.active{border-color:#2d6a9f;background:#2d6a9f;color:white}
+
+    /* ── Card ── */
+    .card{background:white;border-radius:14px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:18px}
+    .card-title{font-size:1rem;font-weight:700;color:#1a365d;margin-bottom:16px;
+      padding-bottom:10px;border-bottom:2px solid #e2e8f0}
+
+    /* ── Form ── */
+    .form-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    @media(max-width:580px){.form-row{grid-template-columns:1fr}}
+    .form-group{display:flex;flex-direction:column;gap:5px}
+    .form-group label{font-size:.8rem;font-weight:600;color:#4a5568}
+    select,input[type=text]{padding:9px 12px;border:1.5px solid #cbd5e0;border-radius:8px;
+      font-size:.9rem;font-family:inherit;direction:rtl;background:#fafafa;
+      appearance:none;-webkit-appearance:none;transition:border .2s}
+    select:focus,input:focus{outline:none;border-color:#2d6a9f;background:white}
+    select:disabled,input:disabled{opacity:.4;cursor:not-allowed}
+    .btn{margin-top:16px;width:100%;padding:12px;background:linear-gradient(135deg,#1a365d,#2d6a9f);
+      color:white;border:none;border-radius:10px;font-size:.95rem;font-weight:700;
+      cursor:pointer;font-family:inherit}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+
+    /* ── Results ── */
+    .result-card{background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:11px;
+      padding:14px;margin-bottom:12px}
+    .rc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .rc-model{font-size:.9rem;font-weight:700;color:#1a365d}
+    .rc-year{font-size:.75rem;color:#718096;background:#e2e8f0;padding:2px 8px;border-radius:8px}
+    .rc-desc{font-size:.75rem;color:#718096;margin-bottom:10px}
+    .filters-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    @media(max-width:460px){.filters-grid{grid-template-columns:1fr}}
+    .fbox{background:white;border-radius:8px;padding:9px 11px;border:1px solid #e2e8f0}
+    .fbox.type-oil   {border-right:3px solid #f59e0b}
+    .fbox.type-air   {border-right:3px solid #3b82f6}
+    .fbox.type-fuel  {border-right:3px solid #ef4444}
+    .fbox.type-cabin {border-right:3px solid #10b981}
+    .flabel{font-size:.68rem;font-weight:700;color:#718096;margin-bottom:4px}
+    .frows{display:flex;flex-direction:column;gap:3px}
+    .frow{display:flex;align-items:center;gap:6px}
+    .fbrand{font-size:.62rem;font-weight:700;padding:1px 5px;border-radius:3px;min-width:42px;text-align:center}
+    .bmann  {background:#dbeafe;color:#1e40af}
+    .bwunder{background:#fef3c7;color:#92400e}
+    .bmc    {background:#d1fae5;color:#065f46}
+    .fnum{font-size:.85rem;font-weight:700;color:#1a202c}
+    .fnum.na{color:#cbd5e0;font-size:.75rem;font-weight:400}
+    .cpbtn{background:none;border:1px solid #ddd;border-radius:3px;padding:1px 5px;
+      font-size:.62rem;cursor:pointer;color:#666;margin-right:auto}
+
+    /* ── Cross-ref ── */
+    .cr-card{background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:11px;padding:14px;margin-bottom:11px}
+    .cr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+    @media(max-width:440px){.cr-grid{grid-template-columns:1fr 1fr}}
+    .cr-item{background:white;border-radius:7px;padding:9px;border:1px solid #e2e8f0;text-align:center}
+    .cr-brand{font-size:.68rem;color:#718096;font-weight:700;margin-bottom:2px}
+    .cr-num{font-size:.88rem;font-weight:700;color:#1a365d}
+    .cr-num.na{color:#cbd5e0;font-size:.75rem;font-weight:400}
+    .cr-type{display:inline-block;padding:2px 9px;border-radius:9px;font-size:.7rem;font-weight:700;margin-bottom:7px}
+    .ct-air{background:#dbeafe;color:#1e40af} .ct-oil{background:#fef3c7;color:#92400e}
+    .ct-fuel{background:#fee2e2;color:#991b1b} .ct-cabin{background:#d1fae5;color:#065f46}
+    .cr-desc{font-size:.75rem;color:#4a5568;background:#ebf8ff;border-radius:5px;padding:5px 9px;margin-top:6px}
+
+    /* ── قائمة الشراء ── */
+    .buy-section{margin-bottom:20px}
+    .buy-cat-title{font-size:.9rem;font-weight:700;color:white;padding:8px 14px;
+      border-radius:8px 8px 0 0;margin-bottom:0}
+    .buy-table{width:100%;border-collapse:collapse;font-size:.82rem}
+    .buy-table th{background:#f0f4f8;padding:8px 10px;text-align:right;font-weight:700;color:#4a5568}
+    .buy-table td{padding:7px 10px;border-bottom:1px solid #f0f4f8;vertical-align:top}
+    .buy-table tr:hover td{background:#f7fafc}
+    .priority-1{font-weight:700;color:#dc2626}
+    .priority-2{font-weight:600;color:#d97706}
+    .priority-3{color:#374151}
+    .star-3::before{content:"⭐ "}
+    .star-2::before{content:"🔸 "}
+
+    .loading{text-align:center;padding:20px;color:#718096}
+    .errbox{background:#fff5f5;border:1px solid #fc8181;border-radius:9px;padding:12px;color:#c53030;margin-top:12px}
+    .badge{background:#1a365d;color:white;border-radius:11px;padding:2px 9px;font-size:.75rem;font-weight:700}
+    .print-btn{width:100%;padding:9px;background:white;color:#1a365d;border:2px solid #1a365d;
+      border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:9px;font-family:inherit}
+    @media print{.header,.tabs,.form-section,.btn,.print-btn,.cpbtn,.cat-chips{display:none!important}
+      .card{box-shadow:none;border:1px solid #ddd}}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔧 مستشار قطع الغيار</h1>
+  <p>الرقة وشرق سوريا · MANN · WUNDER · MC</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('car')">🚗 البحث بالسيارة</button>
+  <button class="tab-btn" onclick="switchTab('num')">🔢 البحث بالرقم</button>
+  <button class="tab-btn" onclick="switchTab('vin')">🔖 رقم الشاصيه</button>
+  <button class="tab-btn" onclick="switchTab('buy')">🛒 قائمة الشراء</button>
+</div>
+
+<!-- ══════════ TAB: السيارة ══════════ -->
+<div class="tab-panel active" id="tab-car">
+<div class="container">
+  <div class="card form-section">
+    <div class="card-title">فئة المركبة</div>
+
+    <!-- Chips الفئات -->
+    <div class="cat-chips" id="cat-chips">
+      <button class="chip active" data-cat="all"      onclick="selectCat(this)">🚗 الكل</button>
+      <button class="chip" data-cat="taxi"    onclick="selectCat(this)">🚕 تكاسي وسرافيس</button>
+      <button class="chip" data-cat="private" onclick="selectCat(this)">🏠 خاص</button>
+      <button class="chip" data-cat="light"   onclick="selectCat(this)">🚐 خفيف ومتوسط</button>
+      <button class="chip" data-cat="heavy"   onclick="selectCat(this)">🚛 شاحنات ثقيلة</button>
+      <button class="chip" data-cat="agri"    onclick="selectCat(this)">🚜 زراعي</button>
+      <button class="chip" data-cat="const"   onclick="selectCat(this)">🏗️ بناء وإنشاء</button>
+    </div>
+
+    <div class="form-row" style="margin-top:14px">
+      <div class="form-group">
+        <label>الشركة</label>
+        <select id="sel-make" onchange="loadModels()">
+          <option value="">— اختر —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>الموديل</label>
+        <input type="text" id="inp-model" placeholder="اكتب أو اختر..." disabled
+          list="model-list" oninput="onModelInput()"/>
+        <datalist id="model-list"></datalist>
+      </div>
+      <div class="form-group">
+        <label>السنة (اختياري)</label>
+        <input type="text" id="inp-year" placeholder="مثال: 2018" disabled/>
+      </div>
+    </div>
+    <button class="btn" id="btn-search" onclick="doSearch()" disabled>🔍 بحث عن الفلاتر</button>
+  </div>
+
+  <div class="loading" id="car-load" style="display:none">⏳ جاري البحث...</div>
+  <div class="errbox"  id="car-err"  style="display:none"></div>
+  <div id="car-res"></div>
+</div>
+</div>
+
+<!-- ══════════ TAB: الرقم ══════════ -->
+<div class="tab-panel" id="tab-num">
+<div class="container">
+  <div class="card">
+    <div class="card-title">البحث برقم الفلتر</div>
+    <p style="font-size:.82rem;color:#718096;margin-bottom:12px">
+      أدخل أي رقم (WUNDER · MC · MANN · MAHLE · HENGST · OEM)
+    </p>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="cr-in" placeholder="WY914  أو  W 712/83  أو  OC988"
+        style="flex:1" onkeydown="if(event.key==='Enter')doCR()"/>
+      <button onclick="doCR()"
+        style="padding:9px 18px;background:linear-gradient(135deg,#1a365d,#2d6a9f);color:white;
+          border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit">
+        بحث
+      </button>
+    </div>
+    <div class="loading" id="cr-load" style="display:none;margin-top:12px">⏳</div>
+    <div class="errbox"  id="cr-err"  style="display:none;margin-top:12px"></div>
+    <div id="cr-res" style="margin-top:14px"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB: VIN ══════════ -->
+<div class="tab-panel" id="tab-vin">
+<div class="container">
+  <div class="card">
+    <div class="card-title">🔖 البحث برقم الشاصيه (VIN)</div>
+
+    <div style="background:#ebf8ff;border-radius:8px;padding:12px;margin-bottom:16px;font-size:.83rem;color:#2c5282;line-height:1.7">
+      رقم الشاصيه = <strong>17 خانة</strong> موجود على:<br/>
+      📌 لوحة داخل الباب الأمامي الأيسر &nbsp;·&nbsp; أمام الزجاج &nbsp;·&nbsp; ورقة السيارة<br/>
+      <span style="color:#744210">⚡ الخانة العاشرة = سنة الصنع &nbsp;·&nbsp; الخانات 1-3 = الشركة</span>
+    </div>
+
+    <input id="vin-inp" type="text" maxlength="17"
+      placeholder="أدخل رقم الشاصيه — 17 خانة"
+      oninput="vinPrev(this.value)"
+      style="width:100%;padding:14px;border:2px solid #2d6a9f;border-radius:10px;
+             font-size:1rem;font-family:monospace;text-transform:uppercase;
+             letter-spacing:2px;text-align:center;direction:ltr;background:#fafafa;margin-bottom:12px"/>
+
+    <!-- معاينة -->
+    <div id="vin-prev-box" style="display:none;background:#ebf8ff;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+        <div>
+          <div style="font-size:.72rem;color:#718096;margin-bottom:3px">الشركة</div>
+          <div id="vin-make-lbl" style="font-size:.95rem;font-weight:700;color:#1a365d">—</div>
+        </div>
+        <div>
+          <div style="font-size:.72rem;color:#718096;margin-bottom:3px">سنة الصنع</div>
+          <div id="vin-year-lbl" style="font-size:.95rem;font-weight:700;color:#744210">—</div>
+        </div>
+        <div>
+          <div style="font-size:.72rem;color:#718096;margin-bottom:3px">الحالة</div>
+          <div id="vin-stat-lbl" style="font-size:.82rem;color:#4a5568">—</div>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="decodeVinMainV2(document.getElementById('vin-inp').value.toUpperCase().trim())" id="vin-main-btn" disabled class="btn">🔍 ابحث عن الفلاتر</button>
+
+    <div class="loading" id="vin-main-load" style="display:none;margin-top:14px">⏳ جاري التحقق...</div>
+    <div class="error-box" id="vin-main-err" style="display:none;margin-top:12px"></div>
+    <div id="vin-main-res" style="margin-top:16px"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB: قائمة الشراء ══════════ -->
+<div class="tab-panel" id="tab-buy">
+<div class="container">
+  <div class="card">
+    <div class="card-title">🛒 قائمة الشراء المقترحة — الرقة وشرق سوريا</div>
+    <p style="font-size:.82rem;color:#718096;margin-bottom:16px">
+      مرتّبة بالأولوية · ⭐ ضروري دائماً · 🔸 مهم · الأرقام من كتالوج Mann الرسمي 2024
+    </p>
+    <div id="buy-content"></div>
+    <button class="print-btn" onclick="window.print()">🖨️ طباعة القائمة</button>
+  </div>
+</div>
+</div>
+
+<script>
+const API = (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
+const enc = s => encodeURIComponent(s);
+const norm = s => s.replace(/[\s\-]/g,'').toUpperCase();
+
+async function apiFetch(p) {
+  const r = await fetch(API+p);
+  if (!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'خطأ');}
+  return r.json();
+}
+
+// ── قوائم الشركات حسب الفئة ──────────────────────────────────
+const CAT_MAKES = {
+  all:     null,
+  taxi:    ['KIA','HYUNDAI','TOYOTA','NISSAN'],
+  private: ['TOYOTA','KIA','HYUNDAI','NISSAN','MITSUBISHI','PEUGEOT','RENAULT','OPEL','CITROEN','BMW','MERCEDES-BENZ','VOLKSWAGEN','FORD','CHEVROLET','DAEWOO','CHERY','GEELY','BYD'],
+  light:   ['TOYOTA','MITSUBISHI','ISUZU','HINO','NISSAN','MERCEDES-BENZ','FORD','HYUNDAI'],
+  heavy:   ['MAN','MERCEDES-BENZ','SCANIA','VOLVO','DAF','IVECO'],
+  agri:    ['MASSEY FERGUSON','JOHN DEERE','NEW HOLLAND','CLAAS','FENDT','DEUTZ-FAHR','SAME','KUBOTA'],
+  const:   ['CATERPILLAR','JCB','KOMATSU','VOLVO','HYUNDAI','LIEBHERR','CASE','MANITOU','HITACHI'],
+};
+
+let currentCat = 'all';
+let allMakes   = [];
+
+// ── Tabs ──────────────────────────────────────────────────────
+function switchTab(n) {
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['car','num','vin','buy'][i]===n));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+n).classList.add('active');
+  if (n==='buy') buildBuyList();
+}
+
+// ══ VIN Decoder ══════════════════════════════════════════════
+const AUTO_DEV_KEY = 'sk_ad_vRv2CCWwpr7sJp2Sv4HdqupM';
+const VIN_WMI = {
+  'JT':'TOYOTA','JTD':'TOYOTA','JTM':'TOYOTA','JTG':'TOYOTA',
+  'JN':'NISSAN','JN1':'NISSAN','JN8':'NISSAN',
+  'JHM':'HONDA','JH4':'HONDA',
+  'JA3':'MITSUBISHI','JA4':'MITSUBISHI',
+  'JS2':'SUZUKI',
+  'KNA':'KIA','KNB':'KIA','KNC':'KIA','KND':'KIA',
+  'KMH':'HYUNDAI','KMF':'HYUNDAI','KM8':'HYUNDAI',
+  'VF1':'RENAULT','VF3':'PEUGEOT','VF7':'CITROEN',
+  'WDB':'MERCEDES-BENZ','WDD':'MERCEDES-BENZ','W1K':'MERCEDES-BENZ','WDC':'MERCEDES-BENZ',
+  'WMA':'MAN','WMK':'MAN',
+  'YS3':'SCANIA','YS2':'SCANIA',
+  'YV2':'VOLVO','YV4':'VOLVO',
+  'W0L':'OPEL','WOL':'OPEL',
+  'WVW':'VOLKSWAGEN','VWV':'VOLKSWAGEN','WV1':'VOLKSWAGEN',
+  'WAU':'AUDI','WBA':'BMW','WBY':'BMW',
+  'SAL':'LAND ROVER',
+  'LZE':'CHERY','LJD':'CHERY','LB2':'BYD','LS6':'GEELY',
+};
+const VIN_YR_NEW = {'A':2010,'B':2011,'C':2012,'D':2013,'E':2014,'F':2015,
+  'G':2016,'H':2017,'J':2018,'K':2019,'L':2020,'M':2021,'N':2022,'P':2023,'R':2024,'S':2025};
+const VIN_YR_OLD = {'Y':2000,'X':1999,'W':1998,'V':1997,'T':1996,'S':1995,'R':1994,
+  'P':1993,'N':1992,'M':1991,'L':1990,'K':1989,'J':1988,'H':1987,'G':1986,'F':1985,
+  'E':1984,'D':1983,'C':1982,'B':1981,'A':1980};
+const VIN_YR_NUM = {'1':2001,'2':2002,'3':2003,'4':2004,'5':2005,'6':2006,'7':2007,'8':2008,'9':2009};
+
+function parseVinInfo(vin) {
+  vin = vin.toUpperCase().trim();
+  const make = VIN_WMI[vin.slice(0,3)] || VIN_WMI[vin.slice(0,2)] || '';
+  const yc   = vin[9] || '';
+  const year = VIN_YR_NEW[yc] || VIN_YR_NUM[yc] || VIN_YR_OLD[yc] || null;
+  return { make, year, valid: vin.length === 17 };
+}
+
+function vinPrev(val) {
+  val = val.toUpperCase();
+  document.getElementById('vin-inp').value = val;
+  const box = document.getElementById('vin-prev-box');
+  const btn = document.getElementById('vin-main-btn');
+  if (val.length < 2) { box.style.display='none'; btn.disabled=true; return; }
+  box.style.display = 'block';
+  const i = parseVinInfo(val.padEnd(17,'0'));
+  document.getElementById('vin-make-lbl').textContent = i.make || '—';
+  document.getElementById('vin-year-lbl').textContent = i.year || '—';
+  document.getElementById('vin-stat-lbl').textContent = val.length===17 ? '✅ مكتمل' : `${val.length}/17`;
+  btn.disabled = val.length !== 17;
+}
+
+async function decodeVinMain() {
+  const vin = document.getElementById('vin-inp').value.toUpperCase().trim();
+  if (vin.length !== 17) return;
+
+  document.getElementById('vin-main-res').innerHTML = '';
+  document.getElementById('vin-main-err').style.display  = 'none';
+  document.getElementById('vin-main-load').style.display = 'block';
+
+  const local = parseVinInfo(vin);
+  let make = local.make, model = '', year = local.year, engine = '', fuel = '';
+
+  // 1. auto.dev (أفضل — يغطي كل العالم)
+  if (AUTO_DEV_KEY) {
+    try {
+      const d = await fetch(`https://auto.dev/api/vin/${vin}?apikey=${AUTO_DEV_KEY}`).then(r=>r.json());
+      if (!d.status || d.status !== 'NOT_FOUND') {
+        const m = d.make;  const mo = d.model;
+        if (m)  make  = (typeof m==='object' ? m.name : m).toUpperCase();
+        if (mo) model = typeof mo==='object' ? mo.name : mo;
+        if (d.year) year = parseInt(d.year);
+        if (d.engine?.size)     engine = d.engine.size + 'L';
+        if (d.engine?.fuelType) fuel   = d.engine.fuelType.toLowerCase().includes('diesel') ? 'diesel' : 'gasoline';
+      }
+    } catch(e) {}
+  }
+
+  // 2. NHTSA (احتياطي — أمريكا + يابانية + كورية)
+  if (!make || !model) {
+    try {
+      const d = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/${vin}?format=json`).then(r=>r.json());
+      const r = d.Results[0];
+      if (!make  && r.Make)          make   = r.Make.toUpperCase();
+      if (!model && r.Model)         model  = r.Model;
+      if (!year  && r.ModelYear)     year   = parseInt(r.ModelYear);
+      if (!engine && r.DisplacementL) engine = parseFloat(r.DisplacementL).toFixed(1)+'L';
+      if (!fuel && r.FuelTypePrimary) fuel  = r.FuelTypePrimary.toLowerCase().includes('diesel')?'diesel':'gasoline';
+    } catch(e) {}
+  }
+
+  document.getElementById('vin-main-load').style.display = 'none';
+
+  if (!make) {
+    const el = document.getElementById('vin-main-err');
+    el.style.display='block';
+    el.textContent='❌ تعذّر التعرف على السيارة من رقم الشاصيه';
+    return;
+  }
+
+  // بطاقة المعلومات
+  let html = `<div style="background:#ebf8ff;border:1.5px solid #bee3f8;border-radius:12px;padding:14px;margin-bottom:16px">
+    <div style="font-size:.72rem;color:#718096;font-family:monospace;letter-spacing:1px;margin-bottom:6px">${vin}</div>
+    <div style="font-size:1.05rem;font-weight:700;color:#1a365d;margin-bottom:8px">${make} ${model}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${year?`<span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:8px;font-size:.78rem">📅 ${year}</span>`:''}
+      ${engine?`<span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:8px;font-size:.78rem">🔧 ${engine}</span>`:''}
+      ${fuel?`<span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:8px;font-size:.78rem">${fuel==='diesel'?'⛽ ديزل':'⛽ بنزين'}</span>`:''}
+    </div>
+  </div>`;
+
+  // درجة الزيت
+  let oilInfo = null;
+  try {
+    const ou = `/oil-grade?make=${enc(make)}${model?'&model='+enc(model):''}${year?'&year='+year:''}`;
+    oilInfo = await apiFetch(ou);
+  } catch(e) {}
+
+  if (oilInfo?.oil) {
+    const o = oilInfo.oil;
+    html += `<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:16px">
+      <div style="font-size:.78rem;font-weight:700;color:#92400e;margin-bottom:8px">🛢️ الزيت الموصى به</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-size:1.6rem;font-weight:800;color:#b45309">${o.grade}</span>
+        <span style="background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:8px;font-size:.82rem;font-weight:600">${o.type_ar}</span>
+        <span style="background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:8px;font-size:.82rem">⏱ ${o.change_interval_display}</span>
+      </div>
+    </div>`;
+  }
+
+  // الآن كل شيء يأتي من /vin/decode مباشرة
+  // هيدا الكود يُستدعى من الدالة الجديدة أدناه
+  html += `<button class="print-btn" onclick="window.print()">🖨️ طباعة</button>`;
+  document.getElementById('vin-main-res').innerHTML = html;
+}
+
+// الدالة الجديدة المحسّنة — تستخدم /vin/decode
+async function decodeVinMainV2(vin) {
+  document.getElementById('vin-main-res').innerHTML = '';
+  document.getElementById('vin-main-err').style.display  = 'none';
+  document.getElementById('vin-main-load').style.display = 'block';
+
+  let d = null;
+  try {
+    d = await apiFetch(`/vin/decode?vin=${enc(vin)}`);
+  } catch(e) {
+    document.getElementById('vin-main-load').style.display = 'none';
+    const el = document.getElementById('vin-main-err');
+    el.style.display = 'block';
+    el.textContent   = '❌ ' + e.message;
+    return;
+  }
+  document.getElementById('vin-main-load').style.display = 'none';
+
+  const v   = d.vehicle;
+  const src = {'auto.dev':'auto.dev ✅','nhtsa':'NHTSA ✅','mann_graphql':'Mann Filter ✅'}[d.source] || d.source;
+  const icons ={oil:'🛢️',air:'💨',fuel:'⛽',cabin:'🌿'};
+  const labels={oil:'زيت',air:'هواء',fuel:'وقود',cabin:'كابين'};
+
+  let html = `<div style="background:#ebf8ff;border:1.5px solid #bee3f8;border-radius:12px;padding:14px;margin-bottom:14px">
+    <div style="font-size:.68rem;color:#718096;font-family:monospace;letter-spacing:1px;margin-bottom:6px">${vin}</div>
+    <div style="font-size:1.05rem;font-weight:700;color:#1a365d;margin-bottom:8px">${v.make} ${v.model}</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+      ${v.year?`<span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:8px;font-size:.78rem">📅 ${v.year}</span>`:''}
+      ${v.engine?`<span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:8px;font-size:.78rem">🔧 ${v.engine}</span>`:''}
+      ${v.fuel_type?`<span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:8px;font-size:.78rem">${v.fuel_type==='diesel'?'⛽ ديزل':'⛽ بنزين'}</span>`:''}
+    </div>
+    <div style="font-size:.68rem;color:#718096">المصدر: ${src}</div>
+  </div>`;
+
+  if (d.oil) {
+    const o = d.oil;
+    html += `<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:12px;margin-bottom:14px">
+      <div style="font-size:.72rem;font-weight:700;color:#92400e;margin-bottom:6px">🛢️ الزيت الموصى به</div>
+      <span style="font-size:1.3rem;font-weight:800;color:#b45309">${o.grade}</span>
+      <span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:8px;font-size:.78rem;margin-right:8px">${o.type_ar}</span>
+      <span style="font-size:.78rem;color:#92400e">⏱ ${o.change_interval_display}</span>
+    </div>`;
+  }
+
+  if (d.filters && d.filters.length > 0) {
+    html += `<div style="font-size:.82rem;color:#4a5568;margin-bottom:10px">${d.filters.length} نتيجة</div>`;
+    d.filters.slice(0,4).forEach(r => {
+      const fboxes = ['oil','air','fuel','cabin'].map(t => {
+        const fi = r.filters[t]; if(!fi.mann&&!fi.wunder&&!fi.mc) return '';
+        const rows=[
+          fi.mann  ?`<div class="frow"><span class="fbrand bmann">MANN</span><span class="fnum">${fi.mann}</span><button class="cpbtn" onclick="copyText('${fi.mann}',this)">نسخ</button></div>`:'',
+          fi.wunder?`<div class="frow"><span class="fbrand bwunder">WUNDER</span><span class="fnum">${fi.wunder}</span><button class="cpbtn" onclick="copyText('${fi.wunder}',this)">نسخ</button></div>`:'',
+          fi.mc    ?`<div class="frow"><span class="fbrand bmc">MC</span><span class="fnum">${fi.mc}</span><button class="cpbtn" onclick="copyText('${fi.mc}',this)">نسخ</button></div>`:'',
+        ].filter(Boolean).join('');
+        return `<div class="fbox type-${t}"><div class="flabel">${icons[t]} ${labels[t]}</div><div class="frows">${rows}</div></div>`;
+      }).filter(Boolean).join('');
+      if (!fboxes) return;
+      html += `<div class="result-card">
+        <div class="rc-header"><span class="rc-model">${r.model}</span><span class="rc-year">${r.year||''}</span></div>
+        <div class="rc-desc">${r.desc}</div>
+        <div class="filters-grid">${fboxes}</div></div>`;
+    });
+  } else {
+    html += `<div class="error-box" style="display:block">⚠️ تم التعرف على السيارة (${v.make} ${v.model}) لكن الفلاتر غير متوفرة في قاعدة البيانات</div>`;
+  }
+
+  html += `<button class="print-btn" onclick="window.print()">🖨️ طباعة</button>`;
+  document.getElementById('vin-main-res').innerHTML = html;
+}
+
+// ── Category chips ────────────────────────────────────────────
+function selectCat(el) {
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  currentCat = el.dataset.cat;
+  populateMakes();
+  resetForm();
+}
+
+function populateMakes() {
+  const sel = document.getElementById('sel-make');
+  const allowed = CAT_MAKES[currentCat];
+  sel.innerHTML = '<option value="">— اختر الشركة —</option>';
+  const list = allowed ? allMakes.filter(m => allowed.includes(m)) : allMakes;
+  list.forEach(m => { const o=document.createElement('option'); o.value=o.textContent=m; sel.appendChild(o); });
+}
+
+// ── تهيئة ────────────────────────────────────────────────────
+async function init() {
+  try {
+    const d = await apiFetch('/makes');
+    allMakes = d.makes;
+    populateMakes();
+  } catch(e) { console.error(e); }
+}
+
+function resetForm() {
+  document.getElementById('inp-model').value=''; document.getElementById('inp-model').disabled=true;
+  document.getElementById('inp-year').value='';  document.getElementById('inp-year').disabled=true;
+  document.getElementById('btn-search').disabled=true;
+  document.getElementById('model-list').innerHTML='';
+  document.getElementById('car-res').innerHTML='';
+  document.getElementById('car-err').style.display='none';
+}
+
+// ── تحميل الموديلات ───────────────────────────────────────────
+async function loadModels() {
+  const make = document.getElementById('sel-make').value;
+  resetForm();
+  if (!make) return;
+  document.getElementById('inp-model').disabled=false;
+  document.getElementById('inp-year').disabled=false;
+  try {
+    const d = await apiFetch(`/models?make=${enc(make)}`);
+    const dl = document.getElementById('model-list');
+    d.models.forEach(m=>{const o=document.createElement('option');o.value=m;dl.appendChild(o);});
+  } catch(e) {}
+}
+function onModelInput() {
+  document.getElementById('btn-search').disabled = document.getElementById('inp-model').value.trim().length < 1;
+}
+
+// ── البحث ────────────────────────────────────────────────────
+async function doSearch() {
+  const make  = document.getElementById('sel-make').value;
+  const model = document.getElementById('inp-model').value.trim();
+  const year  = document.getElementById('inp-year').value.trim();
+  if (!make || !model) return;
+  document.getElementById('car-res').innerHTML='';
+  document.getElementById('car-err').style.display='none';
+  document.getElementById('car-load').style.display='block';
+  try {
+    // البحث عن الفلاتر ودرجة الزيت بالتوازي
+    const [filtersData, oilData] = await Promise.allSettled([
+      apiFetch(`/search?make=${enc(make)}&model=${enc(model)}${year?'&year='+enc(year):''}`),
+      apiFetch(`/oil-grade?make=${enc(make)}&model=${enc(model)}${year?'&year='+enc(year):''}`)
+    ]);
+    const oil = oilData.status==='fulfilled' ? oilData.value?.oil : null;
+    if (filtersData.status==='fulfilled') renderResults(filtersData.value, oil);
+    else throw new Error(filtersData.reason?.message || 'خطأ');
+  } catch(e) {
+    document.getElementById('car-err').style.display='block';
+    document.getElementById('car-err').textContent='❌ '+e.message;
+  } finally { document.getElementById('car-load').style.display='none'; }
+}
+
+// ── عرض النتائج ───────────────────────────────────────────────
+function renderResults(d, oil) {
+  const box = document.getElementById('car-res');
+  const icons = {air:'💨',oil:'🛢️',fuel:'⛽',cabin:'🌿'};
+  const labels= {air:'هواء',oil:'زيت',fuel:'وقود',cabin:'كابين'};
+
+  box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <span style="font-size:.85rem;color:#4a5568">نتائج البحث</span>
+    <span class="badge">${d.count} نتيجة</span></div>`;
+
+  // ── بطاقة درجة الزيت ──
+  if (oil) {
+    if (oil.needs_year && oil.options) {
+      const rows = oil.options.map(o => {
+        const rq = o.raqqa || {};
+        const diff = rq.grade && rq.grade !== o.grade;
+        return `<div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #fef3c7">
+          <span style="font-size:.8rem;color:#92400e;font-weight:700">${o.years}</span>
+          <div>
+            <div style="font-size:.65rem;color:#a16207;margin-bottom:2px">📖 الكتاب</div>
+            <span style="font-size:.95rem;font-weight:800;color:#b45309">${o.grade}</span>
+            <span style="font-size:.72rem;color:#92400e;margin-right:4px">${o.type_ar}</span>
+          </div>
+          <div style="background:${diff?'#fef2f2':'#f0fdf4'};border-radius:8px;padding:5px 8px">
+            <div style="font-size:.65rem;color:${diff?'#991b1b':'#166534'};margin-bottom:2px">🌡️ للرقة</div>
+            <span style="font-size:.95rem;font-weight:800;color:${diff?'#dc2626':'#16a34a'}">${rq.grade||o.grade}</span>
+            ${diff?`<div style="font-size:.65rem;color:#991b1b;margin-top:2px">⚠️ تعديل للمناخ</div>`:''}
+          </div>
+        </div>`;
+      }).join('');
+      box.innerHTML += `
+        <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:14px">
+          <div style="font-size:.78rem;font-weight:700;color:#92400e;margin-bottom:10px">🛢️ الزيت — حدد السنة للدقة</div>
+          <div style="background:#fef9c3;border-radius:8px;padding:8px 10px;font-size:.78rem;color:#854d0e;margin-bottom:10px">
+            ⚠️ هذه السيارة عندها درجات زيت مختلفة حسب السنة
+          </div>
+          ${rows}
+        </div>`;
+    } else if (oil.oil) {
+      const o = oil.oil;
+      const rq = o.raqqa || {};
+      const diff = rq.grade && rq.grade !== o.grade;
+      box.innerHTML += `
+        <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:14px">
+          <div style="font-size:.75rem;font-weight:700;color:#92400e;margin-bottom:10px">🛢️ الزيت الموصى به ${oil.year_from?'('+oil.year_from+'–'+oil.year_to+')':''}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:#fef9c3;border-radius:10px;padding:12px">
+              <div style="font-size:.68rem;color:#a16207;margin-bottom:5px">📖 حسب الكتاب الرسمي</div>
+              <div style="font-size:1.4rem;font-weight:800;color:#b45309">${o.grade}</div>
+              <div style="font-size:.76rem;color:#92400e;margin-top:3px">${o.type_ar} · ${o.change_interval_display}</div>
+            </div>
+            <div style="background:${diff?'#fef2f2':'#f0fdf4'};border-radius:10px;padding:12px;border:${diff?'1.5px solid #fca5a5':'1.5px solid #86efac'}">
+              <div style="font-size:.68rem;color:${diff?'#991b1b':'#166534'};margin-bottom:5px">🌡️ للرقة وسوريا</div>
+              <div style="font-size:1.4rem;font-weight:800;color:${diff?'#dc2626':'#16a34a'}">${rq.grade||o.grade}</div>
+              <div style="font-size:.72rem;color:${diff?'#b91c1c':'#15803d'};margin-top:3px">${rq.reason||''}</div>
+            </div>
+          </div>
+          ${diff?`<div style="background:#fff1f2;border:1px solid #fda4af;border-radius:8px;padding:8px 12px;margin-top:10px;font-size:.78rem;color:#9f1239">
+            ⚠️ الكتاب يوصي بـ ${o.grade} لكنها مصممة للمناخ الأوروبي/الأمريكي — في حرارة سوريا يُنصح بـ ${rq.grade}
+          </div>`:''}
+        </div>`;
+    }
+  }
+
+  d.results.forEach(r=>{
+    const f=r.filters;
+    const fboxes=['oil','air','fuel','cabin'].map(t=>{
+      const fi=f[t]; if(!fi.mann&&!fi.wunder&&!fi.mc) return '';
+      const rows=[
+        fi.mann   ?`<div class="frow"><span class="fbrand bmann">MANN</span><span class="fnum">${fi.mann}</span><button class="cpbtn" onclick="cp('${fi.mann}',this)">نسخ</button></div>`:'',
+        fi.wunder ?`<div class="frow"><span class="fbrand bwunder">WUNDER</span><span class="fnum">${fi.wunder}</span><button class="cpbtn" onclick="cp('${fi.wunder}',this)">نسخ</button></div>`:'',
+        fi.mc     ?`<div class="frow"><span class="fbrand bmc">MC</span><span class="fnum">${fi.mc}</span><button class="cpbtn" onclick="cp('${fi.mc}',this)">نسخ</button></div>`:'',
+      ].filter(Boolean).join('');
+      return `<div class="fbox type-${t}"><div class="flabel">${icons[t]} ${labels[t]}</div><div class="frows">${rows}</div></div>`;
+    }).filter(Boolean).join('');
+    if(!fboxes) return;
+    box.innerHTML+=`<div class="result-card">
+      <div class="rc-header"><span class="rc-model">${r.make} ${r.model}</span><span class="rc-year">${r.year||''}</span></div>
+      <div class="rc-desc">${r.desc}</div>
+      <div class="filters-grid">${fboxes}</div></div>`;
+  });
+  box.innerHTML+=`<button class="print-btn" onclick="window.print()">🖨️ طباعة</button>`;
+}
+
+// ── Cross-Reference ───────────────────────────────────────────
+async function doCR() {
+  const q=document.getElementById('cr-in').value.trim();
+  if(!q) return;
+  document.getElementById('cr-res').innerHTML='';
+  document.getElementById('cr-err').style.display='none';
+  document.getElementById('cr-load').style.display='block';
+  try{ const d=await apiFetch(`/crossref?q=${enc(q)}`); renderCR(d); }
+  catch(e){ document.getElementById('cr-err').style.display='block'; document.getElementById('cr-err').textContent='❌ '+e.message; }
+  finally{ document.getElementById('cr-load').style.display='none'; }
+}
+
+function renderCR(data) {
+  const ct={air:'ct-air',oil:'ct-oil',fuel:'ct-fuel',cabin:'ct-cabin'};
+  const ta={air:'هواء',oil:'زيت',fuel:'وقود',cabin:'كابين',air_dryer:'جفف'};
+  const brands=[{k:'wunder_no',l:'WUNDER'},{k:'mc_no',l:'MC'},{k:'mann_no',l:'MANN'},
+                {k:'mahle_no',l:'MAHLE'},{k:'hengst_no',l:'HENGST'},{k:'oem_no',l:'OEM'}];
+  const el=document.getElementById('cr-res');
+  el.innerHTML=`<div style="font-size:.8rem;color:#718096;margin-bottom:8px"><strong>${data.count}</strong> نتيجة للرقم "<strong>${data.query}</strong>"</div>`;
+  data.results.forEach(r=>{
+    const tl=ta[r.filter_type]||''; const tc=ct[r.filter_type]||'';
+    const items=brands.map(b=>{const v=r[b.k];return`<div class="cr-item">
+      <div class="cr-brand">${b.l}</div>
+      <div class="cr-num ${v?'':'na'}">${v||'—'}</div>
+      ${v?`<button onclick="cp('${v}',this)" class="cpbtn" style="margin-top:3px">نسخ</button>`:''}</div>`;}).join('');
+    el.innerHTML+=`<div class="cr-card">${tl?`<span class="cr-type ${tc}">${tl}</span>`:''}<div class="cr-grid">${items}</div>${r.description?`<div class="cr-desc">🚗 ${r.description}</div>`:''}</div>`;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// قائمة الشراء
+// ══════════════════════════════════════════════════════════════
+const BUY_LIST = {
+  "🚕 تكاسي وسرافيس": {
+    color:"#7c3aed",
+    note:"كيا سيراتو الأكثر انتشاراً كتاكسي في الرقة",
+    filters:[
+      {p:3,mann:"W811/80",  wunder:"WY902",  mc:"MCOC 280", type:"زيت",   cars:"كيا سيراتو، L200، H1"},
+      {p:3,mann:"HU7001x",  wunder:"WY910",  mc:"",         type:"زيت",   cars:"هيونداي النترا"},
+      {p:3,mann:"HU718x",   wunder:"WY908",  mc:"",         type:"زيت",   cars:"كيا سبورتاج"},
+      {p:3,mann:"W712/83",  wunder:"WY914",  mc:"",         type:"زيت",   cars:"تويوتا كورولا"},
+      {p:2,mann:"WK8060z",  wunder:"WB915",  mc:"",         type:"زيت",   cars:"هيونداي توسان"},
+      {p:3,mann:"C26022",   wunder:"WH984",  mc:"",         type:"هواء",  cars:"كيا سيراتو"},
+      {p:3,mann:"C27021",   wunder:"WH986",  mc:"",         type:"هواء",  cars:"هيونداي النترا"},
+      {p:3,mann:"C2631",    wunder:"WH909",  mc:"",         type:"هواء",  cars:"كيا سبورتاج"},
+      {p:3,mann:"C27013",   wunder:"WH2053", mc:"",         type:"هواء",  cars:"تويوتا كورولا"},
+      {p:3,mann:"WK8019/1", wunder:"",       mc:"",         type:"وقود",  cars:"هيونداي النترا"},
+      {p:3,mann:"WK8205",   wunder:"",       mc:"MCFS 297", type:"وقود",  cars:"كيا سبورتاج"},
+      {p:3,mann:"WK8028z",  wunder:"WB2024", mc:"",         type:"وقود",  cars:"تويوتا كورولا"},
+      {p:3,mann:"CU24013",  wunder:"WP939",  mc:"MCC 211",  type:"كابين", cars:"سيراتو + النترا"},
+      {p:3,mann:"CU1919",   wunder:"WP917",  mc:"MCC 205",  type:"كابين", cars:"كورولا + راف4"},
+      {p:2,mann:"FP24004",  wunder:"",       mc:"MCCK 212", type:"كابين", cars:"كيا سبورتاج (كربون)"},
+    ]
+  },
+  "🚗 سيارات خاصة": {
+    color:"#2563eb",
+    note:"الأكثر تنوعاً — ركّز على Toyota وKia وHyundai وRenault",
+    filters:[
+      {p:3,mann:"W712/83",  wunder:"WY914", mc:"",          type:"زيت",   cars:"كورولا، برادو، هايلكس، هايس"},
+      {p:3,mann:"W67/1",    wunder:"WY909", mc:"MCOC 264",  type:"زيت",   cars:"نيسان صني، ألتيما، اكستريل"},
+      {p:2,mann:"HU611x",   wunder:"WY807", mc:"MCO 142",   type:"زيت",   cars:"رينو سيمبول"},
+      {p:2,mann:"W75/3",    wunder:"WY800", mc:"MCOC 259",  type:"زيت",   cars:"رينو سيمبول، نيسان صني"},
+      {p:2,mann:"WK720/2x", wunder:"WB2022",mc:"",          type:"زيت",   cars:"تويوتا يارس"},
+      {p:3,mann:"C1932",    wunder:"WH822", mc:"",          type:"هواء",  cars:"رينو سيمبول"},
+      {p:3,mann:"C2964",    wunder:"WH974", mc:"",          type:"هواء",  cars:"نيسان صني، ألتيما"},
+      {p:2,mann:"C2513",    wunder:"WH2055",mc:"",          type:"هواء",  cars:"تويوتا يارس"},
+      {p:2,mann:"C3875/1",  wunder:"WH827", mc:"",          type:"هواء",  cars:"نيسان صني كلاسيك"},
+      {p:3,mann:"WK6002",   wunder:"",      mc:"",          type:"وقود",  cars:"رينو سيمبول"},
+      {p:3,mann:"WK939/6",  wunder:"WB807", mc:"",          type:"وقود",  cars:"نيسان صني"},
+      {p:2,mann:"WK854/1",  wunder:"WB913", mc:"",          type:"وقود",  cars:"كيا سورنتو"},
+      {p:2,mann:"CU2945",   wunder:"WP801", mc:"",          type:"كابين", cars:"رينو سيمبول"},
+      {p:2,mann:"CU2345",   wunder:"WP933", mc:"",          type:"كابين", cars:"نيسان صني"},
+      {p:2,mann:"CU22011",  wunder:"WP813", mc:"",          type:"كابين", cars:"رينو لوغان"},
+      {p:2,mann:"CU22032",  wunder:"WP916", mc:"",          type:"كابين", cars:"هايلكس + هايس"},
+    ]
+  },
+  "🚐 خفيف ومتوسط": {
+    color:"#059669",
+    note:"هايلكس وكانتر الأكثر طلباً بشرق سوريا",
+    filters:[
+      {p:3,mann:"W712/83",  wunder:"WY914",  mc:"",          type:"زيت",  cars:"هايلكس + هايس + L200"},
+      {p:3,mann:"WP928/80", wunder:"WY911",  mc:"MCOC 223",  type:"زيت",  cars:"تويوتا هايس"},
+      {p:3,mann:"WK818/80", wunder:"WB1318", mc:"MCFC 283",  type:"زيت",  cars:"ميتسوبيشي كانتر"},
+      {p:2,mann:"W930/26",  wunder:"WY903",  mc:"MCOC 440",  type:"زيت",  cars:"هيونداي H1"},
+      {p:2,mann:"HU718/1k", wunder:"WY703",  mc:"MCO 219",   type:"زيت",  cars:"مرسيدس سبرنتر"},
+      {p:2,mann:"WK842/23x",wunder:"WB715",  mc:"",          type:"وقود", cars:"مرسيدس سبرنتر"},
+      {p:3,mann:"C33017",   wunder:"WH2088", mc:"",          type:"هواء", cars:"تويوتا هايلكس"},
+      {p:3,mann:"C15163/1", wunder:"",       mc:"",          type:"هواء", cars:"تويوتا هايس"},
+      {p:3,mann:"W9069",    wunder:"",       mc:"",          type:"هواء", cars:"ميتسوبيشي كانتر"},
+      {p:2,mann:"WK720/2x", wunder:"WB2022", mc:"",          type:"وقود", cars:"تويوتا هايس"},
+    ]
+  },
+  "🚛 شاحنات ثقيلة": {
+    color:"#dc2626",
+    note:"MAN الأكثر انتشاراً في الرقة — طريق الشرق الرئيسي",
+    filters:[
+      {p:3,mann:"W940/69",  wunder:"",  mc:"MCOC 094",  type:"زيت",  cars:"مان TGS/TGA (D2676) — الأكثر"},
+      {p:3,mann:"W940/66",  wunder:"",  mc:"",          type:"زيت",  cars:"مان TGL/TGM + مرسيدس أتيغو"},
+      {p:3,mann:"W940/64",  wunder:"",  mc:"",          type:"زيت",  cars:"مرسيدس أكتروس MP4 (OM471)"},
+      {p:2,mann:"W940/52",  wunder:"",  mc:"",          type:"زيت",  cars:"مرسيدس أكسور + ماسي فيرغسون"},
+      {p:2,mann:"W950/39",  wunder:"",  mc:"MCOC 313",  type:"زيت",  cars:"سكانيا R Series (DC13)"},
+      {p:2,mann:"W950/40",  wunder:"",  mc:"",          type:"زيت",  cars:"فولفو FH (D13)"},
+      {p:3,mann:"C3967/1",  wunder:"",  mc:"",          type:"هواء", cars:"مان TGS/TGA + مرسيدس أكسور"},
+      {p:3,mann:"C3967",    wunder:"",  mc:"",          type:"هواء", cars:"مان TGL/TGM + كلاس حصادة"},
+      {p:3,mann:"C3967/3",  wunder:"",  mc:"",          type:"هواء", cars:"مرسيدس أكتروس MP4"},
+      {p:2,mann:"C3967/2",  wunder:"",  mc:"",          type:"هواء", cars:"سكانيا R + فولفو FH"},
+      {p:3,mann:"WK8198/2", wunder:"",  mc:"",          type:"وقود", cars:"مان TGS + سكانيا + فولفو"},
+      {p:3,mann:"WK8198/1", wunder:"",  mc:"",          type:"وقود", cars:"مان TGL + مرسيدس أكسور"},
+      {p:3,mann:"WK8198/3", wunder:"",  mc:"",          type:"وقود", cars:"مرسيدس أكتروس MP4"},
+      {p:2,mann:"WK8169",   wunder:"",  mc:"MCFS 121",  type:"وقود", cars:"مرسيدس أتيغو + JCB"},
+    ]
+  },
+  "🚜 زراعي (مهم للرقة)": {
+    color:"#d97706",
+    note:"الرقة منطقة قمح وقطن — ماسي فيرغسون وجون دير الأكثر",
+    filters:[
+      {p:3,mann:"W940/52",  wunder:"",       mc:"",           type:"زيت",  cars:"ماسي فيرغسون + جون دير + نيو هولاند"},
+      {p:2,mann:"W940/66",  wunder:"",       mc:"",           type:"زيت",  cars:"كلاس حصادة (OM906)"},
+      {p:2,mann:"HU945/3x", wunder:"",       mc:"MCO 06",     type:"زيت",  cars:"فيندت + فولفو CE + شاحنات"},
+      {p:3,mann:"C15165",   wunder:"",       mc:"",           type:"هواء", cars:"ماسي فيرغسون + نيو هولاند (Perkins)"},
+      {p:3,mann:"C24650",   wunder:"",       mc:"",           type:"هواء", cars:"جون دير 6100 (PowerTech)"},
+      {p:2,mann:"C3967",    wunder:"",       mc:"",           type:"هواء", cars:"كلاس حصادة"},
+      {p:3,mann:"WK69/6",   wunder:"",       mc:"",           type:"وقود", cars:"ماسي فيرغسون + جون دير"},
+      {p:3,mann:"WK69/1",   wunder:"WB124",  mc:"",           type:"وقود", cars:"نيو هولاند + تويوتا قديم"},
+      {p:2,mann:"WK8169",   wunder:"",       mc:"MCFS 121",   type:"وقود", cars:"كلاس حصادة + مرسيدس أتيغو"},
+      {p:2,mann:"WK842/2",  wunder:"WB304",  mc:"MCFS 098",   type:"وقود", cars:"زراعي متوسط"},
+    ]
+  },
+  "🏗️ بناء وإنشاء": {
+    color:"#64748b",
+    note:"إعادة الإعمار — كاتربيلر وJCB وكوماتسو الأكثر",
+    filters:[
+      {p:3,mann:"W9071",    wunder:"",  mc:"MCOC 083",  type:"زيت",  cars:"كاتربيلر 320 (CAT C6.4)"},
+      {p:3,mann:"W950/47",  wunder:"",  mc:"MCOC 090",  type:"زيت",  cars:"JCB 3CX"},
+      {p:3,mann:"WK731",    wunder:"",  mc:"MCFC 113",  type:"زيت",  cars:"كوماتسو PC200"},
+      {p:2,mann:"HU945/3x", wunder:"",  mc:"MCO 06",    type:"زيت",  cars:"فولفو حفار + فيندت"},
+      {p:2,mann:"W950/18",  wunder:"",  mc:"MCOC 102",  type:"زيت",  cars:"هيونداي R210 + كوماتسو"},
+      {p:3,mann:"C23610",   wunder:"",  mc:"",          type:"هواء", cars:"كاتربيلر 320"},
+      {p:2,mann:"C21431",   wunder:"",  mc:"",          type:"هواء", cars:"هيونداي R210"},
+      {p:3,mann:"WK8169",   wunder:"",  mc:"MCFS 121",  type:"وقود", cars:"JCB + مرسيدس أتيغو"},
+      {p:2,mann:"WK727",    wunder:"",  mc:"MCFC 186",  type:"وقود", cars:"هيونداي R210"},
+      {p:2,mann:"PU815x",   wunder:"",  mc:"MCF 048",   type:"وقود", cars:"فولفو حفار"},
+      {p:3,mann:"CF610",    wunder:"",  mc:"",          type:"كابين",cars:"كاتربيلر 320"},
+    ]
+  }
+};
+
+function buildBuyList() {
+  const el = document.getElementById('buy-content');
+  if (el.innerHTML) return; // بنيت مسبقاً
+  let html = '';
+  for (const [catName, catData] of Object.entries(BUY_LIST)) {
+    const rows = catData.filters.map(f => {
+      const pClass = f.p===3?'star-3 priority-1':f.p===2?'star-2 priority-2':'priority-3';
+      return `<tr>
+        <td class="${pClass}">${f.mann}</td>
+        <td>${f.wunder||'—'}</td>
+        <td>${f.mc||'—'}</td>
+        <td><span style="background:#f0f4f8;padding:2px 7px;border-radius:5px;font-size:.75rem">${f.type}</span></td>
+        <td style="color:#4a5568;font-size:.78rem">${f.cars}</td>
+      </tr>`;
+    }).join('');
+    html += `<div class="buy-section">
+      <div class="buy-cat-title" style="background:${catData.color}">
+        ${catName} <span style="font-size:.75rem;opacity:.85">— ${catData.note}</span>
+      </div>
+      <table class="buy-table">
+        <thead><tr><th>MANN</th><th>WUNDER</th><th>MC</th><th>نوع</th><th>السيارات</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function cp(t,btn){
+  navigator.clipboard.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='✓';setTimeout(()=>btn.textContent=o,1200);});
+}
+
+init();
+</script>
+</body>
+</html>

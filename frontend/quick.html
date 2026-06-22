@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>فلاتر السيارات — الرقة</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI','Arial',sans-serif;background:#0f172a;color:#f1f5f9;direction:rtl;min-height:100vh}
+
+/* ── Header ── */
+.hdr{background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.hdr-title{font-size:1.1rem;font-weight:700}
+.hdr-sub{font-size:.72rem;opacity:.75}
+.search-bar{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  border-radius:8px;padding:7px 12px;color:white;font-size:.88rem;
+  font-family:inherit;direction:rtl;width:160px}
+.search-bar::placeholder{color:rgba(255,255,255,.6)}
+.search-bar:focus{outline:none;background:rgba(255,255,255,.25)}
+
+/* ── Tabs ── */
+.cats{display:flex;gap:6px;padding:12px 12px 4px;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{padding:6px 14px;border-radius:20px;border:1.5px solid #334155;
+  background:transparent;color:#94a3b8;font-size:.78rem;font-weight:600;
+  cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s}
+.cat.on{background:#2563eb;border-color:#2563eb;color:white}
+
+/* ── Cars Grid ── */
+.cars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 12px}
+@media(max-width:360px){.cars{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:600px){.cars{grid-template-columns:repeat(4,1fr)}}
+
+.car-btn{background:#1e293b;border:1.5px solid #334155;border-radius:12px;
+  padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;gap:5px}
+.car-btn:active{transform:scale(.95);background:#2563eb;border-color:#2563eb}
+.car-btn.sel{background:#1d4ed8;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.4)}
+.car-icon{font-size:1.5rem}
+.car-name{font-size:.72rem;font-weight:600;line-height:1.3;color:#e2e8f0}
+.car-btn.no-data .car-name{color:#64748b}
+.car-btn.no-data{opacity:.6}
+
+/* ── Result Panel ── */
+.panel{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:#0f172a;border-top:2px solid #2563eb;
+  max-height:70vh;overflow-y:auto}
+.panel.show{display:block}
+.panel-hdr{background:#1e3a5f;padding:12px 16px;display:flex;
+  justify-content:space-between;align-items:center;position:sticky;top:0}
+.panel-title{font-size:1rem;font-weight:700}
+.close-btn{background:#334155;border:none;color:white;padding:6px 14px;
+  border-radius:8px;font-size:.82rem;cursor:pointer;font-family:inherit}
+.panel-body{padding:12px}
+
+/* ── Filter Cards ── */
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.f-card{background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155}
+.f-card.oil  {border-right:3px solid #f59e0b}
+.f-card.air  {border-right:3px solid #3b82f6}
+.f-card.fuel {border-right:3px solid #ef4444}
+.f-card.cabin{border-right:3px solid #10b981}
+.f-label{font-size:.68rem;font-weight:700;color:#64748b;margin-bottom:8px}
+.f-num-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.f-brand{font-size:.6rem;font-weight:700;padding:2px 5px;border-radius:3px;min-width:40px;text-align:center}
+.bmann  {background:#1e40af;color:#bfdbfe}
+.bwunder{background:#78350f;color:#fde68a}
+.bmc    {background:#064e3b;color:#6ee7b7}
+.f-val{font-size:.88rem;font-weight:700;color:#f1f5f9;flex:1}
+.f-val.na{color:#475569;font-size:.75rem}
+.cp{background:none;border:1px solid #334155;border-radius:3px;padding:1px 5px;
+  font-size:.6rem;cursor:pointer;color:#94a3b8;margin-right:auto}
+.cp:active{background:#334155}
+
+/* تنبيه ناقص */
+.missing-note{background:#7c2d12;border-radius:8px;padding:10px 12px;
+  font-size:.78rem;color:#fed7aa;margin-bottom:8px}
+
+/* ── Print ── */
+.print-row{display:flex;gap:8px}
+.print-btn{flex:1;padding:11px;background:#1e40af;color:white;border:none;
+  border-radius:9px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit}
+.share-btn{flex:1;padding:11px;background:#065f46;color:white;border:none;
+  border-radius:9px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit}
+
+@media print{
+  .hdr,.cats,.cars,.panel-hdr .close-btn,.print-row,.cat,.search-bar{display:none!important}
+  .panel{display:block!important;position:static;border:none;max-height:none}
+  .panel-hdr{background:white;color:black}
+  .panel-title{color:black;font-size:1.2rem}
+  .f-card{background:white;border:1px solid #ddd;color:black}
+  .f-val{color:black}
+  .f-label{color:#666}
+  body{background:white}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-title">🔧 فلاتر السيارات</div>
+    <div class="hdr-sub">الرقة · اضغط على السيارة</div>
+  </div>
+  <input class="search-bar" id="q" placeholder="ابحث بالاسم..." oninput="filterCars(this.value)"/>
+</div>
+
+<div class="cats">
+  <button class="cat on" onclick="setCat('all',this)">الكل</button>
+  <button class="cat" onclick="setCat('taxi',this)">🚕 تكاسي</button>
+  <button class="cat" onclick="setCat('private',this)">🚗 خاص</button>
+  <button class="cat" onclick="setCat('light',this)">🚐 خفيف</button>
+  <button class="cat" onclick="setCat('heavy',this)">🚛 ثقيل</button>
+  <button class="cat" onclick="setCat('agri',this)">🚜 زراعي</button>
+  <button class="cat" onclick="setCat('const',this)">🏗️ بناء</button>
+  <button class="cat" onclick="openFullSearch()" style="background:#0f4c81;border-color:#2563eb;color:#93c5fd">🔍 بحث كامل</button>
+  <button class="cat" onclick="openVin()" style="background:#134e4a;border-color:#0d9488;color:#5eead4">🔖 رقم الشاصيه</button>
+</div>
+
+<div class="cars" id="cars-grid"></div>
+
+<!-- VIN Modal -->
+<div id="vin-modal" style="display:none;position:fixed;inset:0;z-index:300;background:#0f172a;overflow-y:auto">
+  <div style="background:#134e4a;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0">
+    <button onclick="closeVin()" style="background:#1f4e4b;border:none;color:white;padding:7px 14px;border-radius:8px;font-size:.85rem;cursor:pointer;font-family:inherit">← رجوع</button>
+    <span style="font-weight:700;font-size:1rem">🔖 البحث برقم الشاصيه (VIN)</span>
+  </div>
+  <div style="padding:16px">
+    <!-- شرح -->
+    <div style="background:#1e293b;border-radius:10px;padding:12px;margin-bottom:14px;font-size:.8rem;color:#94a3b8;line-height:1.7">
+      رقم الشاصيه (VIN) = 17 رقم/حرف موجود على:
+      <span style="color:#5eead4">لوحة داخل الباب الأمامي الأيسر · لوحة أمام الزجاج · ورقة السيارة</span><br/>
+      <span style="color:#fbbf24">الخانة العاشرة = سنة الصنع · الخانة 1-3 = الشركة</span>
+    </div>
+
+    <!-- إدخال VIN -->
+    <input id="vin-input" type="text" maxlength="17"
+      placeholder="أدخل رقم الشاصيه — 17 خانة"
+      oninput="vinPreview(this.value)"
+      style="width:100%;padding:14px;border:2px solid #0d9488;background:#1e293b;color:white;
+             border-radius:10px;font-size:1rem;font-family:monospace;text-transform:uppercase;
+             letter-spacing:2px;text-align:center;direction:ltr;margin-bottom:10px"/>
+
+    <!-- معاينة فورية -->
+    <div id="vin-preview" style="background:#1e293b;border-radius:10px;padding:12px;margin-bottom:12px;display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+        <div>
+          <div style="font-size:.65rem;color:#64748b;margin-bottom:3px">الشركة</div>
+          <div id="vp-make" style="font-size:.9rem;font-weight:700;color:#5eead4">—</div>
+        </div>
+        <div>
+          <div style="font-size:.65rem;color:#64748b;margin-bottom:3px">سنة الصنع</div>
+          <div id="vp-year" style="font-size:.9rem;font-weight:700;color:#fbbf24">—</div>
+        </div>
+        <div>
+          <div style="font-size:.65rem;color:#64748b;margin-bottom:3px">الحالة</div>
+          <div id="vp-status" style="font-size:.8rem;color:#94a3b8">—</div>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="decodeVin()" id="vin-btn" disabled
+      style="width:100%;padding:12px;background:#0d9488;color:white;border:none;border-radius:10px;
+             font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:14px">
+      🔍 ابحث عن الفلاتر
+    </button>
+
+    <div id="vin-loading" style="display:none;text-align:center;padding:20px;color:#5eead4">
+      ⏳ جاري التحقق من البيانات...
+    </div>
+    <div id="vin-error" style="display:none;background:#7f1d1d;border-radius:8px;padding:12px;color:#fca5a5;margin-bottom:12px"></div>
+    <div id="vin-result"></div>
+  </div>
+</div>
+
+<!-- Full Search Modal -->
+<div id="full-modal" style="display:none;position:fixed;inset:0;z-index:300;background:#0f172a;overflow-y:auto">
+  <div style="background:#1e3a5f;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0">
+    <button onclick="closeFullSearch()" style="background:#334155;border:none;color:white;padding:7px 14px;border-radius:8px;font-size:.85rem;cursor:pointer;font-family:inherit">← رجوع</button>
+    <span style="font-weight:700;font-size:1rem">بحث قاعدة البيانات الكاملة</span>
+  </div>
+  <div style="padding:14px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:.78rem;color:#94a3b8;display:block;margin-bottom:4px">الشركة</label>
+        <select id="fs-make" onchange="fsMakeChange()" style="width:100%;padding:9px;border:1.5px solid #334155;background:#1e293b;color:white;border-radius:8px;font-size:.88rem;font-family:inherit">
+          <option value="">— اختر —</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:.78rem;color:#94a3b8;display:block;margin-bottom:4px">الموديل</label>
+        <input id="fs-model" type="text" list="fs-models" placeholder="اكتب الموديل..." disabled
+          style="width:100%;padding:9px;border:1.5px solid #334155;background:#1e293b;color:white;border-radius:8px;font-size:.88rem;font-family:inherit"/>
+        <datalist id="fs-models"></datalist>
+      </div>
+    </div>
+    <button onclick="fsSearch()" id="fs-btn" disabled
+      style="width:100%;padding:11px;background:#2563eb;color:white;border:none;border-radius:9px;font-size:.92rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:14px">
+      🔍 بحث
+    </button>
+    <div id="fs-loading" style="display:none;text-align:center;padding:20px;color:#94a3b8">⏳ جاري البحث...</div>
+    <div id="fs-error"   style="display:none;background:#7f1d1d;border-radius:8px;padding:12px;color:#fca5a5;margin-bottom:12px"></div>
+    <div id="fs-results"></div>
+  </div>
+</div>
+
+<!-- Result Panel -->
+<div class="panel" id="panel">
+  <div class="panel-hdr">
+    <span class="panel-title" id="panel-title"></span>
+    <button class="close-btn" onclick="closePanel()">✕ إغلاق</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<script>
+// ── بيانات السيارات (مدمجة مباشرة — تعمل offline) ──────────────
+const AUTO_DEV_KEY = 'sk_ad_vRv2CCWwpr7sJp2Sv4HdqupM';
+
+const CARS = [
+  {id:1, name:"تويوتا كورولا",     icon:"🚗", cat:"taxi,private",
+   oil:"W712/83",oil_w:"WY914",oil_mc:"", air:"C27013",air_w:"WH2053",air_mc:"", fuel:"WK8028z",fuel_w:"WB2024",fuel_mc:"", cabin:"CU1919",cabin_w:"WP917",cabin_mc:"MCC 205"},
+  {id:2, name:"كيا سيراتو",        icon:"🚕", cat:"taxi,private",
+   oil:"W811/80",oil_w:"WY902",oil_mc:"MCOC 280", air:"C26022",air_w:"WH984",air_mc:"", fuel:"WK8019/3",fuel_w:"",fuel_mc:"", cabin:"CU24013",cabin_w:"WP939",cabin_mc:"MCC 211"},
+  {id:3, name:"هيونداي النترا",    icon:"🚕", cat:"taxi,private",
+   oil:"W811/80",oil_w:"WY902",oil_mc:"MCOC 280", air:"C24054",air_w:"WH934",air_mc:"", fuel:"WK8019/1",fuel_w:"",fuel_mc:"", cabin:"CU2356",cabin_w:"",cabin_mc:""},
+  {id:4, name:"كيا سبورتاج",       icon:"🚕", cat:"taxi,private",
+   oil:"HU718x",oil_w:"WY908",oil_mc:"", air:"C2631",air_w:"WH909",air_mc:"", fuel:"WK8205",fuel_w:"",fuel_mc:"MCFS 297", cabin:"FP24004",cabin_w:"",cabin_mc:"MCCK 212"},
+  {id:5, name:"هيونداي توسان",     icon:"🚕", cat:"taxi,private",
+   oil:"HU7048z",oil_w:"",oil_mc:"", air:"W8017",air_w:"",air_mc:"", fuel:"WK8060z",fuel_w:"WB915",fuel_mc:"", cabin:"CUK23019/1",cabin_w:"",cabin_mc:""},
+  {id:6, name:"تويوتا كامري",      icon:"🚗", cat:"private",
+   oil:"W712/94",oil_w:"",oil_mc:"", air:"C35154",air_w:"",air_mc:"", fuel:"WK939/2",fuel_w:"WB807",fuel_mc:"", cabin:"CU29005",cabin_w:"",cabin_mc:""},
+  {id:7, name:"بيجو 301",          icon:"🚗", cat:"private",
+   oil:"HU826x",oil_w:"WY283",oil_mc:"", air:"C25150",air_w:"",air_mc:"", fuel:"WK9034",fuel_w:"",fuel_mc:"", cabin:"CU26012",cabin_w:"",cabin_mc:""},
+  {id:8, name:"رينو سيمبول",       icon:"🚗", cat:"private",
+   oil:"HU611x",oil_w:"WY807",oil_mc:"MCO 142", air:"C1932",air_w:"WH822",air_mc:"", fuel:"WK6002",fuel_w:"",fuel_mc:"", cabin:"CU2945",cabin_w:"WP801",cabin_mc:""},
+  {id:9, name:"تويوتا يارس",       icon:"🚗", cat:"private",
+   oil:"W68/3",oil_w:"WY905",oil_mc:"MCOC 270", air:"C24005",air_w:"WH2065",air_mc:"", fuel:"WK720/2x",fuel_w:"WB2022",fuel_mc:"", cabin:"CU1919",cabin_w:"WP917",cabin_mc:"MCC 205"},
+  {id:10, name:"نيسان صني",        icon:"🚗", cat:"private",
+   oil:"W67/1",oil_w:"WY909",oil_mc:"MCOC 264", air:"C2964",air_w:"WH974",air_mc:"", fuel:"WK939/6",fuel_w:"WB807",fuel_mc:"", cabin:"CU2345",cabin_w:"WP933",cabin_mc:""},
+  {id:11, name:"ميتسوبيشي لانسر", icon:"🚗", cat:"private",
+   oil:"W67/1",oil_w:"WY909",oil_mc:"MCOC 264", air:"C30188",air_w:"",air_mc:"", fuel:"WK69/1",fuel_w:"WB124",fuel_mc:"", cabin:"CU2939",cabin_w:"WP401",cabin_mc:""},
+  {id:12, name:"رينو لوغان",       icon:"🚗", cat:"private",
+   oil:"PU9011zKIT",oil_w:"WB813",oil_mc:"", air:"HU10002z",air_w:"",air_mc:"", fuel:"WK9034",fuel_w:"",fuel_mc:"", cabin:"CU22011",cabin_w:"WP813",cabin_mc:""},
+  {id:13, name:"كيا بيكانتو",      icon:"🚗", cat:"private",
+   oil:"W7023",oil_w:"WY918",oil_mc:"", air:"C30188",air_w:"",air_mc:"", fuel:"WK8205",fuel_w:"",fuel_mc:"MCFS 297", cabin:"CU1910",cabin_w:"",cabin_mc:""},
+  {id:14, name:"لاند كروزر",       icon:"🚙", cat:"private",
+   oil:"W712/83",oil_w:"WY914",oil_mc:"", air:"C31007",air_w:"",air_mc:"", fuel:"WK8198/1",fuel_w:"",fuel_mc:"", cabin:"CU3567",cabin_w:"",cabin_mc:""},
+  {id:15, name:"كيا سورنتو",       icon:"🚙", cat:"private",
+   oil:"HU824x",oil_w:"WY283",oil_mc:"", air:"W811/80",air_w:"WY902",air_mc:"MCOC 280", fuel:"WK854/1",fuel_w:"WB913",fuel_mc:"", cabin:"CU23024",cabin_w:"",cabin_mc:""},
+  {id:16, name:"هيونداي سانتافي",  icon:"🚙", cat:"private",
+   oil:"HU824x",oil_w:"WY283",oil_mc:"", air:"C30154",air_w:"",air_mc:"", fuel:"WK854/1",fuel_w:"WB913",fuel_mc:"", cabin:"CU29012",cabin_w:"",cabin_mc:""},
+  {id:17, name:"تويوتا برادو",     icon:"🚙", cat:"private",
+   oil:"W712/83",oil_w:"WY914",oil_mc:"", air:"C30188/2",air_w:"",air_mc:"", fuel:"WK8198/1",fuel_w:"",fuel_mc:"", cabin:"CU3567",cabin_w:"",cabin_mc:""},
+  {id:18, name:"أوبل أسترا",       icon:"🚗", cat:"private",
+   oil:"PU723x",oil_w:"WB305",oil_mc:"", air:"HU712/8x",air_w:"",air_mc:"", fuel:"WK939/2",fuel_w:"WB807",fuel_mc:"", cabin:"CU3054",cabin_w:"WP934",cabin_mc:""},
+  {id:19, name:"بيجو 206",         icon:"🚗", cat:"private",
+   oil:"W610/3",oil_w:"WY304",oil_mc:"", air:"C2513",air_w:"WH2055",air_mc:"", fuel:"WK939/6",fuel_w:"WB807",fuel_mc:"", cabin:"CU2939",cabin_w:"WP401",cabin_mc:""},
+  {id:20, name:"نيسان ألتيما",     icon:"🚗", cat:"private",
+   oil:"W67/1",oil_w:"WY909",oil_mc:"MCOC 264", air:"C2964",air_w:"WH974",air_mc:"", fuel:"WK939/6",fuel_w:"WB807",fuel_mc:"", cabin:"CU29005",cabin_w:"",cabin_mc:""},
+  {id:21, name:"تويوتا راف4",      icon:"🚙", cat:"private",
+   oil:"W712/94",oil_w:"",oil_mc:"", air:"C30188",air_w:"",air_mc:"", fuel:"WK939/2",fuel_w:"WB807",fuel_mc:"", cabin:"CU35009",cabin_w:"",cabin_mc:""},
+  {id:22, name:"نيسان اكستريل",    icon:"🚙", cat:"private",
+   oil:"W67/1",oil_w:"WY909",oil_mc:"MCOC 264", air:"C30188",air_w:"",air_mc:"", fuel:"WK8107",fuel_w:"",fuel_mc:"", cabin:"CU26010",cabin_w:"",cabin_mc:""},
+  {id:23, name:"هيونداي أكسنت",    icon:"🚗", cat:"private",
+   oil:"W811/80",oil_w:"WY902",oil_mc:"MCOC 280", air:"C24054",air_w:"WH934",air_mc:"", fuel:"WK8019/1",fuel_w:"",fuel_mc:"", cabin:"CU2939",cabin_w:"WP401",cabin_mc:""},
+  {id:24, name:"ميتسوبيشي باجيرو", icon:"🚙", cat:"private",
+   oil:"WP928/81",oil_w:"",oil_mc:"", air:"C16148",air_w:"",air_mc:"", fuel:"WK8198/1",fuel_w:"",fuel_mc:"", cabin:"CU3567",cabin_w:"",cabin_mc:""},
+  {id:25, name:"كيا ريو",          icon:"🚗", cat:"private",
+   oil:"W811/80",oil_w:"WY902",oil_mc:"MCOC 280", air:"C2658",air_w:"",air_mc:"", fuel:"WK854/1",fuel_w:"WB913",fuel_mc:"", cabin:"CU29012",cabin_w:"",cabin_mc:""},
+  {id:26, name:"BMW 318 / 320",    icon:"🚗", cat:"private",
+   oil:"HU818x",oil_w:"",oil_mc:"", air:"C24141",air_w:"",air_mc:"", fuel:"WK939/2",fuel_w:"WB807",fuel_mc:"", cabin:"CU2939",cabin_w:"WP401",cabin_mc:""},
+  {id:27, name:"مرسيدس C200",      icon:"🚗", cat:"private",
+   oil:"HU821x",oil_w:"WY719",oil_mc:"", air:"C29035-2",air_w:"",air_mc:"", fuel:"WK9040",fuel_w:"",fuel_mc:"", cabin:"LAK360",cabin_w:"",cabin_mc:""},
+  {id:28, name:"شيري تيغو",        icon:"🚙", cat:"private",
+   oil:"W610/3",oil_w:"WY304",oil_mc:"", air:"C2733",air_w:"",air_mc:"", fuel:"WK939/2",fuel_w:"WB807",fuel_mc:"", cabin:"CU2939",cabin_w:"WP401",cabin_mc:""},
+  {id:29, name:"جيلي إمجراند",     icon:"🚗", cat:"private",
+   oil:"W67/1",oil_w:"WY909",oil_mc:"MCOC 264", air:"C26010",air_w:"WH984",air_mc:"", fuel:"WK939/2",fuel_w:"WB807",fuel_mc:"", cabin:"CU29012",cabin_w:"",cabin_mc:""},
+  {id:30, name:"سيتروين برلينغو",  icon:"🚐", cat:"light",
+   oil:"HU7020z",oil_w:"",oil_mc:"", air:"C26010",air_w:"WH984",air_mc:"", fuel:"WK939/2",fuel_w:"WB807",fuel_mc:"", cabin:"CU29012",cabin_w:"",cabin_mc:""},
+  {id:31, name:"تويوتا هايلكس",   icon:"🛻", cat:"light",
+   oil:"W712/83",oil_w:"WY914",oil_mc:"", air:"C33017",air_w:"WH2088",air_mc:"", fuel:"WK8107",fuel_w:"",fuel_mc:"", cabin:"CU22032",cabin_w:"WP916",cabin_mc:""},
+  {id:32, name:"ميتسوبيشي L200",  icon:"🛻", cat:"light",
+   oil:"WP928/81",oil_w:"",oil_mc:"", air:"C16148",air_w:"",air_mc:"", fuel:"WK8107",fuel_w:"",fuel_mc:"", cabin:"CU3567",cabin_w:"",cabin_mc:""},
+  {id:33, name:"تويوتا هايس",     icon:"🚐", cat:"light",
+   oil:"WP928/80",oil_w:"WY911",oil_mc:"MCOC 223", air:"C15163/1",air_w:"",air_mc:"", fuel:"WK720/2x",fuel_w:"WB2022",fuel_mc:"", cabin:"CU22032",cabin_w:"WP916",cabin_mc:""},
+  {id:34, name:"ميتسوبيشي كانتر", icon:"🚛", cat:"light",
+   oil:"WK818/80",oil_w:"WB1318",oil_mc:"MCFC 283", air:"W9069",air_w:"",air_mc:"", fuel:"WK842",fuel_w:"",fuel_mc:"", cabin:"",cabin_w:"",cabin_mc:""},
+  {id:35, name:"مرسيدس سبرنتر",   icon:"🚐", cat:"light",
+   oil:"HU718/1k",oil_w:"WY703",oil_mc:"MCO 219", air:"C24141",air_w:"",air_mc:"", fuel:"WK842/23x",fuel_w:"WB715",fuel_mc:"", cabin:"CU3567",cabin_w:"",cabin_mc:""},
+  {id:36, name:"هيونداي H1",       icon:"🚐", cat:"light",
+   oil:"W930/26",oil_w:"WY903",oil_mc:"MCOC 440", air:"C30188",air_w:"",air_mc:"", fuel:"WK8107",fuel_w:"",fuel_mc:"", cabin:"",cabin_w:"",cabin_mc:""},
+  {id:37, name:"مان TGS",          icon:"🚛", cat:"heavy",
+   oil:"W940/69",oil_w:"",oil_mc:"MCOC 094", air:"C3967/1",air_w:"",air_mc:"", fuel:"WK8198/2",fuel_w:"",fuel_mc:"", cabin:"",cabin_w:"",cabin_mc:""},
+  {id:38, name:"مان TGL",          icon:"🚛", cat:"heavy",
+   oil:"W940/66",oil_w:"",oil_mc:"", air:"C3967",air_w:"",air_mc:"", fuel:"WK8198/1",fuel_w:"",fuel_mc:"", cabin:"",cabin_w:"",cabin_mc:""},
+  {id:39, name:"مرسيدس أكتروس",   icon:"🚛", cat:"heavy",
+   oil:"W940/64",oil_w:"",oil_mc:"", air:"C3967/3",air_w:"",air_mc:"", fuel:"WK8198/3",fuel_w:"",fuel_mc:"", cabin:"",cabin_w:"",cabin_mc:""},
+  {id:40, name:"سكانيا R",         icon:"🚛", cat:"heavy",
+   oil:"W950/39",oil_w:"",oil_mc:"MCOC 313", air:"C3967/2",air_w:"",air_mc:"", fuel:"WK8198/2",fuel_w:"",fuel_mc:"", cabin:"",cabin_w:"",cabin_mc:""},
+  {id:41, name:"ماسي فيرغسون",    icon:"🚜", cat:"agri",
+   oil:"W940/52",oil_w:"",oil_mc:"", air:"C15165",air_w:"",air_mc:"", fuel:"WK69/6",fuel_w:"",fuel_mc:"", cabin:"",cabin_w:"",cabin_mc:""},
+  {id:42, name:"جون دير",          icon:"🚜", cat:"agri",
+   oil:"W940/52",oil_w:"",oil_mc:"", air:"C24650",air_w:"",air_mc:"", fuel:"WK69/6",fuel_w:"",fuel_mc:"", cabin:"",cabin_w:"",cabin_mc:""},
+  {id:43, name:"كاتربيلر 320",    icon:"🏗️", cat:"const",
+   oil:"W9071",oil_w:"",oil_mc:"MCOC 083", air:"C23610",air_w:"",air_mc:"", fuel:"WK8169",fuel_w:"",fuel_mc:"MCFS 121", cabin:"CF610",cabin_w:"",cabin_mc:""},
+  {id:44, name:"JCB 3CX",          icon:"🏗️", cat:"const",
+   oil:"W950/47",oil_w:"",oil_mc:"MCOC 090", air:"",air_w:"",air_mc:"", fuel:"WK8169",fuel_w:"",fuel_mc:"MCFS 121", cabin:"",cabin_w:"",cabin_mc:""},
+  {id:45, name:"كوماتسو PC200",   icon:"⛏️", cat:"const",
+   oil:"WK731",oil_w:"",oil_mc:"MCFC 113", air:"W950/18",air_w:"",air_mc:"MCOC 102", fuel:"",fuel_w:"",fuel_mc:"", cabin:"",cabin_w:"",cabin_mc:""},
+];
+
+let activeCat = 'all';
+let searchQ   = '';
+
+// ── تصيير الشبكة ──────────────────────────────────────────────
+function render() {
+  const grid = document.getElementById('cars-grid');
+  const q    = searchQ.toLowerCase();
+  grid.innerHTML = CARS
+    .filter(c => (activeCat === 'all' || c.cat.includes(activeCat))
+              && (!q || c.name.includes(q)))
+    .map(c => {
+      const hasData = c.oil || c.air;
+      return `<button class="car-btn${hasData?'':' no-data'}" onclick="showCar(${c.id})">
+        <span class="car-icon">${c.icon}</span>
+        <span class="car-name">${c.name}</span>
+      </button>`;
+    }).join('');
+}
+
+function setCat(cat, el) {
+  activeCat = cat;
+  document.querySelectorAll('.cat').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+function filterCars(v) { searchQ = v; render(); }
+
+// ── عرض النتيجة ──────────────────────────────────────────────
+async function showCar(id) {
+  const car = CARS.find(c=>c.id===id);
+  if (!car) return;
+
+  document.querySelectorAll('.car-btn').forEach(b=>b.classList.remove('sel'));
+  event.currentTarget.classList.add('sel');
+
+  // ── درجة الزيت (من قاعدة البيانات لو في API) ──
+  let oilHtml = '';
+  try {
+    const ou = `${API}/oil-grade?make=${encodeURIComponent(car.make||'')}${car.model?'&model='+encodeURIComponent(car.model):''}`;
+    const od = await fetch(ou).then(r=>r.ok?r.json():null).catch(()=>null);
+    if (od?.oil) {
+      const o   = od.oil;
+      const rq  = o.raqqa || {};
+      const diff= rq.grade && rq.grade !== o.grade;
+      oilHtml = `<div style="background:#1c2a14;border:1.5px solid #f59e0b;border-radius:10px;padding:11px;margin-bottom:11px">
+        <div style="font-size:.68rem;font-weight:700;color:#fbbf24;margin-bottom:8px">🛢️ الزيت الموصى به</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#292d1a;border-radius:8px;padding:9px">
+            <div style="font-size:.6rem;color:#a16207;margin-bottom:3px">📖 الكتاب الرسمي</div>
+            <span style="font-size:1.2rem;font-weight:800;color:#fcd34d">${o.grade}</span>
+            <div style="font-size:.68rem;color:#d97706;margin-top:2px">${o.type_ar} · ${o.change_interval_display}</div>
+          </div>
+          <div style="background:${diff?'#3b1515':'#0f2a1a'};border-radius:8px;padding:9px;border:1px solid ${diff?'#ef4444':'#22c55e'}">
+            <div style="font-size:.6rem;color:${diff?'#f87171':'#4ade80'};margin-bottom:3px">🌡️ للرقة</div>
+            <span style="font-size:1.2rem;font-weight:800;color:${diff?'#f87171':'#4ade80'}">${rq.grade||o.grade}</span>
+            ${diff?`<div style="font-size:.62rem;color:#f87171;margin-top:2px">⚠️ تعديل للمناخ</div>`:'<div style="font-size:.62rem;color:#4ade80;margin-top:2px">✅ مناسبة</div>'}
+          </div>
+        </div>
+        ${diff?`<div style="margin-top:8px;font-size:.68rem;color:#fca5a5;background:#3b1515;border-radius:6px;padding:6px 9px">
+          ⚠️ ${rq.reason}
+        </div>`:''}
+      </div>`;
+    }
+  } catch(e) {}
+
+  const FILTERS = [
+    {key:'oil',  label:'🛢️ فلتر الزيت',   cls:'oil'},
+    {key:'air',  label:'💨 فلتر الهواء',   cls:'air'},
+    {key:'fuel', label:'⛽ فلتر الوقود',   cls:'fuel'},
+    {key:'cabin',label:'🌿 فلتر الكابين',  cls:'cabin'},
+  ];
+
+  let html = '';
+  let hasAny = false;
+
+  html += '<div class="f-grid">';
+  for (const f of FILTERS) {
+    const mann   = car[f.key];
+    const wunder = car[f.key+'_w'];
+    const mc     = car[f.key+'_mc'];
+    if (!mann && !wunder && !mc) continue;
+    hasAny = true;
+
+    const rows = [
+      mann   ? `<div class="f-num-row"><span class="f-brand bmann">MANN</span><span class="f-val">${mann}</span><button class="cp" onclick="cp('${mann}')">نسخ</button></div>` : '',
+      wunder ? `<div class="f-num-row"><span class="f-brand bwunder">WUNDER</span><span class="f-val">${wunder}</span><button class="cp" onclick="cp('${wunder}')">نسخ</button></div>` : '',
+      mc     ? `<div class="f-num-row"><span class="f-brand bmc">MC</span><span class="f-val">${mc}</span><button class="cp" onclick="cp('${mc}')">نسخ</button></div>` : '',
+    ].filter(Boolean).join('');
+
+    html += `<div class="f-card ${f.cls}"><div class="f-label">${f.label}</div>${rows}</div>`;
+  }
+  html += '</div>';
+
+  if (!hasAny) {
+    html = '<div class="missing-note">⚠️ البيانات غير مكتملة لهذه السيارة — راجع الكتالوج مباشرة</div>';
+  }
+
+  html += `<div class="print-row">
+    <button class="print-btn" onclick="window.print()">🖨️ طباعة</button>
+    <button class="share-btn" onclick="shareResult('${car.name}',car)">📤 مشاركة</button>
+  </div>`;
+
+  document.getElementById('panel-title').textContent = car.name;
+  document.getElementById('panel-body').innerHTML = oilHtml + html;
+  document.getElementById('panel').classList.add('show');
+}
+
+function closePanel() {
+  document.getElementById('panel').classList.remove('show');
+  document.querySelectorAll('.car-btn').forEach(b=>b.classList.remove('sel'));
+}
+
+function cp(txt) {
+  navigator.clipboard.writeText(txt).catch(()=>{
+    const t = document.createElement('textarea');
+    t.value = txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+  });
+}
+
+function shareResult(name, car) {
+  const parts = [
+    `🔧 فلاتر ${name}`,
+    car.oil   ? `🛢️ زيت: ${car.oil}${car.oil_w?' / '+car.oil_w:''}${car.oil_mc?' / '+car.oil_mc:''}` : '',
+    car.air   ? `💨 هواء: ${car.air}${car.air_w?' / '+car.air_w:''}` : '',
+    car.fuel  ? `⛽ وقود: ${car.fuel}` : '',
+    car.cabin ? `🌿 كابين: ${car.cabin}${car.cabin_w?' / '+car.cabin_w:''}` : '',
+  ].filter(Boolean).join('\n');
+
+  if (navigator.share) {
+    navigator.share({ title: `فلاتر ${name}`, text: parts });
+  } else {
+    cp(parts);
+    alert('تم نسخ المعلومات!');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// VIN DECODER
+// ══════════════════════════════════════════════════════════════
+const WMI_MAP = {
+  'JT':'TOYOTA','JTD':'TOYOTA','JTM':'TOYOTA','JTG':'TOYOTA',
+  'JN':'NISSAN','JN1':'NISSAN','JN8':'NISSAN','JNA':'NISSAN',
+  'JHM':'HONDA','JH4':'HONDA',
+  'JA3':'MITSUBISHI','JA4':'MITSUBISHI','JL5':'MITSUBISHI',
+  'JS2':'SUZUKI','JS3':'SUZUKI',
+  'KNA':'KIA','KNB':'KIA','KNC':'KIA','KND':'KIA',
+  'KMH':'HYUNDAI','KMF':'HYUNDAI','KMJ':'HYUNDAI','KM8':'HYUNDAI',
+  'VF1':'RENAULT','VF3':'PEUGEOT','VF7':'CITROEN','VFA':'PEUGEOT',
+  'VNE':'RENAULT','VNK':'TOYOTA',
+  'WDB':'MERCEDES-BENZ','WDD':'MERCEDES-BENZ','W1K':'MERCEDES-BENZ',
+  'WDC':'MERCEDES-BENZ','WMA':'MAN','WMK':'MAN',
+  'YS3':'SCANIA','YS2':'SCANIA',
+  'YV2':'VOLVO','YV4':'VOLVO',
+  'W0L':'OPEL','WOL':'OPEL',
+  'VWV':'VOLKSWAGEN','WVW':'VOLKSWAGEN','WV1':'VOLKSWAGEN',
+  'WAU':'AUDI','WAP':'PORSCHE',
+  'WBA':'BMW','WBY':'BMW','WBS':'BMW',
+  'SAL':'LAND ROVER','SAJ':'JAGUAR',
+  'LZE':'CHERY','LJD':'CHERY','LB2':'BYD',
+  'LS6':'GEELY','LGX':'BUICK',
+};
+
+const VIN_YEAR = {
+  'A':1980,'B':1981,'C':1982,'D':1983,'E':1984,'F':1985,'G':1986,'H':1987,
+  'J':1988,'K':1989,'L':1990,'M':1991,'N':1992,'P':1993,'R':1994,'S':1995,
+  'T':1996,'V':1997,'W':1998,'X':1999,'Y':2000,
+  '1':2001,'2':2002,'3':2003,'4':2004,'5':2005,'6':2006,'7':2007,'8':2008,'9':2009,
+  'A':2010,'B':2011,'C':2012,'D':2013,'E':2014,'F':2015,'G':2016,'H':2017,
+  'J':2018,'K':2019,'L':2020,'M':2021,'N':2022,'P':2023,'R':2024,'S':2025,
+};
+// سنة 2010-2025 تطغى على 1980-2000
+const VIN_YEAR_NEW = {'A':2010,'B':2011,'C':2012,'D':2013,'E':2014,'F':2015,
+  'G':2016,'H':2017,'J':2018,'K':2019,'L':2020,'M':2021,'N':2022,'P':2023,'R':2024,'S':2025};
+
+function parseVin(vin) {
+  vin = vin.toUpperCase().trim();
+  if (vin.length !== 17) return null;
+
+  // WMI - جرب 3 خانات أولاً ثم 2
+  let make = WMI_MAP[vin.slice(0,3)] || WMI_MAP[vin.slice(0,2)] || '';
+
+  // السنة من الخانة العاشرة (index 9)
+  const yc   = vin[9];
+  // نفترض 2010+ للأحرف (أكثر احتمالاً للسيارات الحديثة بسوريا)
+  const year = VIN_YEAR_NEW[yc] || VIN_YEAR[yc] || null;
+
+  // نوع الوقود من VDS (خانات 4-8) — تقدير
+  const vds = vin.slice(3,8);
+
+  return { vin, make, year, yc, vds, valid: vin.length===17 };
+}
+
+function vinPreview(val) {
+  val = val.toUpperCase();
+  document.getElementById('vin-input').value = val;
+  const prev = document.getElementById('vin-preview');
+  const btn  = document.getElementById('vin-btn');
+
+  if (val.length < 3) { prev.style.display='none'; btn.disabled=true; return; }
+  prev.style.display = 'block';
+
+  const info = parseVin(val.padEnd(17,'0'));
+  document.getElementById('vp-make').textContent = info.make || '—';
+  document.getElementById('vp-year').textContent = info.year || '—';
+  document.getElementById('vp-status').textContent =
+    val.length === 17 ? '✅ مكتمل' : `${val.length}/17 خانة`;
+
+  btn.disabled = val.length !== 17;
+}
+
+async function decodeVin() {
+  const vin = document.getElementById('vin-input').value.toUpperCase().trim();
+  if (vin.length !== 17) return;
+
+  document.getElementById('vin-result').innerHTML = '';
+  document.getElementById('vin-error').style.display  = 'none';
+  document.getElementById('vin-loading').style.display = 'block';
+
+  const local = parseVin(vin);
+  let make = local.make, model = '', year = local.year, engine = '', fuel = '';
+
+  // 1. auto.dev (الأفضل — يغطي كل العالم)
+  if (AUTO_DEV_KEY) {
+    try {
+      const d = await fetch(`https://auto.dev/api/vin/${vin}?apikey=${AUTO_DEV_KEY}`).then(r=>r.json());
+      if (!d.status || d.status !== 'NOT_FOUND') {
+        const m=d.make; const mo=d.model;
+        if (m)  make  = (typeof m==='object'?m.name:m).toUpperCase();
+        if (mo) model = typeof mo==='object'?mo.name:mo;
+        if (d.year) year = parseInt(d.year);
+        if (d.engine?.size)     engine = d.engine.size+'L';
+        if (d.engine?.fuelType) fuel   = d.engine.fuelType.toLowerCase().includes('diesel')?'diesel':'gasoline';
+      }
+    } catch(e) {}
+  }
+
+  // 2. NHTSA احتياطي
+  if (!make || !model) {
+    try {
+      const d = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/${vin}?format=json`).then(r=>r.json());
+      const r = d.Results[0];
+      if (!make  && r.Make)         make   = r.Make.toUpperCase();
+      if (!model && r.Model)        model  = r.Model;
+      if (!year  && r.ModelYear)    year   = parseInt(r.ModelYear);
+      if (!engine && r.DisplacementL) engine = parseFloat(r.DisplacementL).toFixed(1)+'L';
+      if (!fuel && r.FuelTypePrimary) fuel  = r.FuelTypePrimary.toLowerCase().includes('diesel')?'diesel':'gasoline';
+    } catch(e) {}
+  }
+
+  document.getElementById('vin-loading').style.display = 'none';
+
+  if (!make) {
+    showVinError('تعذّر التعرف على الشركة من رقم الشاصيه');
+    return;
+  }
+
+  // 2. عرض معلومات السيارة
+  let html = `
+    <div style="background:#134e4a;border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:.7rem;color:#5eead4;margin-bottom:6px;font-family:monospace;letter-spacing:1px">${vin}</div>
+      <div style="font-size:1.1rem;font-weight:700;color:white;margin-bottom:4px">${make} ${model}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${year?`<span style="background:#0f4c3d;color:#5eead4;padding:3px 10px;border-radius:8px;font-size:.8rem">📅 ${year}</span>`:''}
+        ${engine?`<span style="background:#0f4c3d;color:#5eead4;padding:3px 10px;border-radius:8px;font-size:.8rem">🔧 ${engine}</span>`:''}
+        ${fuel?`<span style="background:#0f4c3d;color:#5eead4;padding:3px 10px;border-radius:8px;font-size:.8rem">${fuel==='diesel'?'⛽ ديزل':'⛽ بنزين'}</span>`:''}
+      </div>
+    </div>`;
+
+  // 3. درجة الزيت من API
+  let oilGrade = null;
+  try {
+    const ou = `${API}/oil-grade?make=${encodeURIComponent(make)}${model?'&model='+encodeURIComponent(model):''}${year?'&year='+year:''}`;
+    const od = await fetch(ou).then(r=>r.json());
+    if (od.oil) oilGrade = od.oil;
+  } catch(e) {}
+
+  if (oilGrade) {
+    html += `<div style="background:#1c2a14;border:1.5px solid #f59e0b;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="font-size:.7rem;font-weight:700;color:#fbbf24;margin-bottom:6px">🛢️ الزيت الموصى به</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:1.5rem;font-weight:800;color:#fcd34d">${oilGrade.grade}</span>
+        <span style="background:#713f12;color:#fde68a;padding:3px 10px;border-radius:7px;font-size:.78rem">${oilGrade.type_ar}</span>
+        <span style="background:#713f12;color:#fde68a;padding:3px 10px;border-radius:7px;font-size:.78rem">⏱ ${oilGrade.change_interval_display}</span>
+      </div>
+    </div>`;
+  }
+
+  // 3. ابحث في Quick Cars أولاً (offline)
+  const quickMatch = CARS.find(c => c.make && make.includes(c.make.split(' ')[0]) &&
+    (c.oil || c.air));
+
+  // 4. ابحث في قاعدة البيانات الكاملة
+  let dbResults = null;
+  try {
+    const searchModel = model || '';
+    const url = `/search?make=${encodeURIComponent(make)}`+
+      (searchModel?`&model=${encodeURIComponent(searchModel)}`:'')+
+      (year?`&year=${year}`:'');
+    const d = await apiFetch(url);
+    dbResults = d;
+  } catch(e) { /* لا API */ }
+
+  if (dbResults && dbResults.count > 0) {
+    html += `<div style="font-size:.8rem;color:#64748b;margin-bottom:10px">نتائج من قاعدة البيانات (${dbResults.count})</div>`;
+    html += renderVinFilters(dbResults.results.slice(0,5));
+  } else if (quickMatch) {
+    html += `<div style="font-size:.8rem;color:#fbbf24;margin-bottom:10px">⚡ من القائمة السريعة — ${quickMatch.name}</div>`;
+    html += renderQuickFilters(quickMatch);
+  } else {
+    html += `<div style="background:#422006;border-radius:8px;padding:12px;color:#fed7aa;font-size:.82rem">
+      ⚠️ تم التعرف على السيارة لكن بيانات الفلاتر غير متوفرة في قاعدة البيانات.<br/>
+      استخدم <strong>البحث الكامل</strong> مع: ${make} ${model} ${year||''}
+    </div>`;
+  }
+
+  html += `<button onclick="cp('${make} ${model} ${year||''}'); alert('تم النسخ!')"
+    style="width:100%;padding:10px;background:#1e293b;color:#94a3b8;border:1px solid #334155;
+           border-radius:8px;font-size:.82rem;cursor:pointer;font-family:inherit;margin-top:10px">
+    📋 نسخ معلومات السيارة
+  </button>`;
+
+  document.getElementById('vin-result').innerHTML = html;
+}
+
+function renderVinFilters(results) {
+  const FTYPES = [{key:'oil',l:'🛢️ زيت',cls:'oil'},{key:'air',l:'💨 هواء',cls:'air'},
+                  {key:'fuel',l:'⛽ وقود',cls:'fuel'},{key:'cabin',l:'🌿 كابين',cls:'cabin'}];
+  let html = '';
+  results.forEach(r => {
+    const f = r.filters;
+    const boxes = FTYPES.map(t=>{
+      const fi=f[t.key]; if(!fi.mann&&!fi.wunder&&!fi.mc) return '';
+      const rows=[
+        fi.mann  ?`<div class="f-num-row"><span class="f-brand bmann">MANN</span><span class="f-val">${fi.mann}</span><button class="cp" onclick="cp('${fi.mann}')">نسخ</button></div>`:'',
+        fi.wunder?`<div class="f-num-row"><span class="f-brand bwunder">WUNDER</span><span class="f-val">${fi.wunder}</span><button class="cp" onclick="cp('${fi.wunder}')">نسخ</button></div>`:'',
+        fi.mc    ?`<div class="f-num-row"><span class="f-brand bmc">MC</span><span class="f-val">${fi.mc}</span><button class="cp" onclick="cp('${fi.mc}')">نسخ</button></div>`:'',
+      ].filter(Boolean).join('');
+      return `<div class="f-card ${t.cls}"><div class="f-label">${t.l}</div>${rows}</div>`;
+    }).filter(Boolean).join('');
+    if (!boxes) return;
+    html += `<div style="background:#1e293b;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid #334155">
+      <div style="font-size:.75rem;color:#94a3b8;margin-bottom:8px">${r.model} · ${r.year||''} · ${r.desc}</div>
+      <div class="f-grid">${boxes}</div></div>`;
+  });
+  return html;
+}
+
+function renderQuickFilters(car) {
+  const FTYPES = [{key:'oil',l:'🛢️ زيت',cls:'oil'},{key:'air',l:'💨 هواء',cls:'air'},
+                  {key:'fuel',l:'⛽ وقود',cls:'fuel'},{key:'cabin',l:'🌿 كابين',cls:'cabin'}];
+  let boxes = FTYPES.map(t=>{
+    const mann=car[t.key],w=car[t.key+'_w'],mc=car[t.key+'_mc'];
+    if(!mann&&!w&&!mc) return '';
+    const rows=[
+      mann?`<div class="f-num-row"><span class="f-brand bmann">MANN</span><span class="f-val">${mann}</span><button class="cp" onclick="cp('${mann}')">نسخ</button></div>`:'',
+      w?`<div class="f-num-row"><span class="f-brand bwunder">WUNDER</span><span class="f-val">${w}</span><button class="cp" onclick="cp('${w}')">نسخ</button></div>`:'',
+      mc?`<div class="f-num-row"><span class="f-brand bmc">MC</span><span class="f-val">${mc}</span><button class="cp" onclick="cp('${mc}')">نسخ</button></div>`:'',
+    ].filter(Boolean).join('');
+    return `<div class="f-card ${t.cls}"><div class="f-label">${t.l}</div>${rows}</div>`;
+  }).filter(Boolean).join('');
+  return `<div class="f-grid">${boxes}</div>`;
+}
+
+function showVinError(msg) {
+  document.getElementById('vin-loading').style.display = 'none';
+  document.getElementById('vin-error').style.display   = 'block';
+  document.getElementById('vin-error').textContent     = '❌ ' + msg;
+}
+function openVin()  { document.getElementById('vin-modal').style.display='block'; }
+function closeVin() { document.getElementById('vin-modal').style.display='none'; }
+
+// ── Full Search (100K سيارة) ──────────────────────────────────
+const API = (window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
+async function apiFetch(p) {
+  const r = await fetch(API+p);
+  if (!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'خطأ');}
+  return r.json();
+}
+
+async function openFullSearch() {
+  document.getElementById('full-modal').style.display='block';
+  if (document.getElementById('fs-make').options.length > 1) return;
+  try {
+    const d = await apiFetch('/makes');
+    const sel = document.getElementById('fs-make');
+    d.makes.forEach(m=>{const o=document.createElement('option');o.value=o.textContent=m;sel.appendChild(o);});
+  } catch(e) {
+    document.getElementById('fs-error').style.display='block';
+    document.getElementById('fs-error').textContent='⚠️ تعذّر الاتصال بالخادم — تأكد أن البرنامج يعمل على المنفذ 8000';
+  }
+}
+function closeFullSearch() { document.getElementById('full-modal').style.display='none'; }
+
+async function fsMakeChange() {
+  const make = document.getElementById('fs-make').value;
+  const inp  = document.getElementById('fs-model');
+  const dl   = document.getElementById('fs-models');
+  inp.disabled = !make; inp.value='';
+  dl.innerHTML='';
+  document.getElementById('fs-btn').disabled = true;
+  if (!make) return;
+  try {
+    const d = await apiFetch(`/models?make=${encodeURIComponent(make)}`);
+    d.models.forEach(m=>{const o=document.createElement('option');o.value=m;dl.appendChild(o);});
+    inp.oninput = ()=>{ document.getElementById('fs-btn').disabled = inp.value.trim().length < 1; };
+  } catch(e){}
+}
+
+async function fsSearch() {
+  const make  = document.getElementById('fs-make').value;
+  const model = document.getElementById('fs-model').value.trim();
+  if (!make || !model) return;
+  document.getElementById('fs-results').innerHTML='';
+  document.getElementById('fs-error').style.display='none';
+  document.getElementById('fs-loading').style.display='block';
+  try {
+    const d = await apiFetch(`/search?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}`);
+    renderFsResults(d, make+' '+model);
+  } catch(e) {
+    document.getElementById('fs-error').style.display='block';
+    document.getElementById('fs-error').textContent='❌ '+e.message;
+  } finally { document.getElementById('fs-loading').style.display='none'; }
+}
+
+function renderFsResults(d, title) {
+  const box = document.getElementById('fs-results');
+  const FTYPES = [
+    {key:'oil',  label:'🛢️ زيت',   cls:'oil'},
+    {key:'air',  label:'💨 هواء',  cls:'air'},
+    {key:'fuel', label:'⛽ وقود', cls:'fuel'},
+    {key:'cabin',label:'🌿 كابين',cls:'cabin'},
+  ];
+  box.innerHTML = `<div style="font-size:.8rem;color:#64748b;margin-bottom:10px">${d.count} نتيجة لـ "${title}"</div>`;
+
+  d.results.slice(0,15).forEach(r=>{
+    const f = r.filters;
+    const fboxes = FTYPES.map(t=>{
+      const fi=f[t.key]; if(!fi.mann&&!fi.wunder&&!fi.mc) return '';
+      const rows=[
+        fi.mann  ?`<div class="f-num-row"><span class="f-brand bmann">MANN</span><span class="f-val">${fi.mann}</span><button class="cp" onclick="cp('${fi.mann}')">نسخ</button></div>`:'',
+        fi.wunder?`<div class="f-num-row"><span class="f-brand bwunder">WUNDER</span><span class="f-val">${fi.wunder}</span><button class="cp" onclick="cp('${fi.wunder}')">نسخ</button></div>`:'',
+        fi.mc    ?`<div class="f-num-row"><span class="f-brand bmc">MC</span><span class="f-val">${fi.mc}</span><button class="cp" onclick="cp('${fi.mc}')">نسخ</button></div>`:'',
+      ].filter(Boolean).join('');
+      return `<div class="f-card ${t.cls}"><div class="f-label">${t.label}</div>${rows}</div>`;
+    }).filter(Boolean).join('');
+    if(!fboxes) return;
+    box.innerHTML+=`<div style="background:#1e293b;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid #334155">
+      <div style="font-size:.78rem;color:#94a3b8;margin-bottom:8px">${r.model} · ${r.year||''} · ${r.desc}</div>
+      <div class="f-grid">${fboxes}</div></div>`;
+  });
+}
+
+// بدء
+render();
+</script>
+</body>
+</html>
